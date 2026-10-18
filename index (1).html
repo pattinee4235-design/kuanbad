@@ -1,0 +1,1193 @@
+<!doctype html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#1C6A4F">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%231C6A4F'/%3E%3Cpath d='M32 10l-9 26h18z' fill='%23fff'/%3E%3Ccircle cx='32' cy='44' r='9' fill='%23E8B83A'/%3E%3C/svg%3E">
+<link rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%231C6A4F'/%3E%3Cpath d='M32 10l-9 26h18z' fill='%23fff'/%3E%3Ccircle cx='32' cy='44' r='9' fill='%23E8B83A'/%3E%3C/svg%3E">
+<title>ก๊วนแบดจัดคู่</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@500;600;700&family=IBM+Plex+Sans+Thai:wght@400;500;600&family=IBM+Plex+Sans+JP:wght@400;500;600&display=swap" rel="stylesheet">
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.js"></script>
+<style>
+/* Layout: one-column phone app — sticky header with language switch, courts drawn top-down like a doubles court, fixed bottom tab bar */
+:root{
+  --bg:#EDF2EF; --surface:#FFFFFF; --ink:#13201B; --muted:#5A6A63; --line:#D3DCD7; --chip:#E1E9E4;
+  --accent:#1C6A4F; --accent-ink:#FFFFFF; --shuttle:#C98F0A; --loss:#B2432E;
+  --gold:#C99A06; --silver:#8E989E; --bronze:#A8622E; --court:#2E7859; --court-deep:#256348; --court-line:#F3F7F4; --court-ink:#FFFFFF; --court-chip:rgba(8,30,22,.30);
+  --f-display:'Chakra Petch','IBM Plex Sans Thai','IBM Plex Sans JP',system-ui,sans-serif;
+  --f-body:'IBM Plex Sans Thai','IBM Plex Sans JP',system-ui,-apple-system,sans-serif;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#0D1411; --surface:#16201C; --ink:#E4ECE8; --muted:#94A49D; --line:#283631; --chip:#21302A;
+  --accent:#55B78E; --accent-ink:#06120D; --shuttle:#E8B83A; --loss:#E3775F;
+  --gold:#E8BE3A; --silver:#B9C2C7; --bronze:#D08A55; --court:#1E5741; --court-deep:#184735; --court-line:#CFE1D8; --court-ink:#F2F7F4; --court-chip:rgba(0,0,0,.32);
+  color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0D1411; --surface:#16201C; --ink:#E4ECE8; --muted:#94A49D; --line:#283631; --chip:#21302A;
+  --accent:#55B78E; --accent-ink:#06120D; --shuttle:#E8B83A; --loss:#E3775F;
+  --gold:#E8BE3A; --silver:#B9C2C7; --bronze:#D08A55; --court:#1E5741; --court-deep:#184735; --court-line:#CFE1D8; --court-ink:#F2F7F4; --court-chip:rgba(0,0,0,.32);
+  color-scheme:dark}
+html,body{height:100%}
+body{background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:15px;line-height:1.5;-webkit-tap-highlight-color:transparent}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:10;background:var(--bg)}
+.in{max-width:560px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+button,input,select,textarea{font:inherit;color:inherit}
+button{cursor:pointer;border:0;background:none}
+:focus-visible{outline:2px solid var(--shuttle);outline-offset:2px}
+h1,h2,h3{font-family:var(--f-display);margin:0;text-wrap:balance}
+.top{position:sticky;top:env(safe-area-inset-top,0px);z-index:6;background:var(--bg);border-bottom:1px solid var(--line)}
+.top .in{padding-block:8px;display:flex;flex-direction:column;gap:6px}
+.toprow{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.brand{font-size:19px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
+.lang{display:inline-flex;border:1px solid var(--line);border-radius:8px;overflow:hidden;flex:0 0 auto}
+.lang button{min-height:32px;padding:2px 10px;font-family:var(--f-display);font-weight:600;font-size:13px;border-right:1px solid var(--line)}
+.lang button:last-child{border-right:0}
+.lang button[aria-pressed="true"]{background:var(--ink);color:var(--bg)}
+.counts{display:flex;gap:6px;flex-wrap:wrap;font-family:var(--f-display);font-variant-numeric:tabular-nums;font-size:13px}
+.counts span{background:var(--chip);border-radius:6px;padding:1px 8px;white-space:nowrap}
+main .in{padding-block:14px calc(96px + env(safe-area-inset-bottom,0px));display:flex;flex-direction:column;gap:16px}
+.sec{display:flex;flex-direction:column;gap:10px}
+.sec-h{display:flex;align-items:baseline;justify-content:space-between;gap:8px;flex-wrap:wrap}
+.sec-h h2{font-size:17px;font-weight:600}
+.hint{color:var(--muted);font-size:13px}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:14px;display:flex;flex-direction:column;gap:12px}
+.card h2{font-size:17px}
+.lbl{font-size:13px;color:var(--muted);margin-bottom:6px}
+.btn{min-height:42px;padding:8px 14px;border-radius:9px;background:var(--chip);font-weight:500;display:inline-flex;align-items:center;justify-content:center;gap:6px;text-align:center}
+.btn.pri{background:var(--accent);color:var(--accent-ink);font-weight:600}
+.btn.ghost{background:transparent;border:1px solid var(--line)}
+.btn.warn{color:var(--loss);border:1px solid var(--line);background:transparent}
+.btn.armed{background:var(--loss);color:#fff;border-color:var(--loss)}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+.btn.sm{min-height:36px;padding:4px 10px;font-size:14px}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.row > .grow{flex:1 1 0;min-width:0}
+.modes{display:flex;gap:6px;overflow-x:auto;padding-bottom:2px;scrollbar-width:none}
+.modes::-webkit-scrollbar{display:none}
+.mchip{flex:0 0 auto;min-height:38px;padding:6px 14px;border-radius:20px;border:1px solid var(--line);background:var(--surface);font-weight:500;white-space:nowrap}
+.mchip[aria-pressed="true"]{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.mdesc{font-size:13.5px;color:var(--muted)}
+.nums{display:grid;grid-template-columns:repeat(8,minmax(0,1fr));gap:4px}
+.num{min-height:44px;border-radius:9px;border:1px solid var(--line);background:var(--surface);font-family:var(--f-display);font-weight:700;font-size:17px}
+.num[aria-pressed="true"]{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+.court{background:var(--court);color:var(--court-ink);border-radius:12px;padding:10px 10px 12px;display:flex;flex-direction:column;gap:10px}
+.court-h{display:flex;justify-content:space-between;align-items:baseline;gap:8px;font-family:var(--f-display);padding-inline:2px;flex-wrap:wrap}
+.court-h b{font-size:16px;font-weight:700;letter-spacing:.03em}
+.court-h span{font-size:13px;opacity:.88;font-variant-numeric:tabular-nums}
+.field{position:relative;border:2px solid var(--court-line);display:grid;grid-template-columns:1fr 1fr;min-height:132px;background:var(--court-deep)}
+.field::before{content:"";position:absolute;left:50%;top:-7px;bottom:-7px;border-left:3px dotted var(--court-line);transform:translateX(-50%);z-index:1}
+.half{position:relative;padding:10px;display:flex;flex-direction:column;justify-content:center;gap:8px;min-width:0}
+.half::before{content:"";position:absolute;top:0;bottom:0;border-left:1.5px solid var(--court-line);opacity:.55}
+.half::after{content:"";position:absolute;top:50%;border-top:1.5px solid var(--court-line);opacity:.55}
+.half.l::before{right:26%}.half.l::after{left:0;right:26%}
+.half.r::before{left:26%}.half.r::after{right:0;left:26%}
+.pc{position:relative;z-index:2;display:flex;align-items:center;justify-content:space-between;gap:6px;background:var(--court-chip);color:var(--court-ink);border-radius:7px;padding:7px 8px;min-height:40px;text-align:left;width:100%;border:2px solid transparent}
+.pc .nm{font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0}
+.pc.sel{border-color:var(--shuttle)}
+.lvb{flex:0 0 auto;font-family:var(--f-display);font-size:12px;font-weight:600;padding:1px 6px;border-radius:5px;background:var(--chip);color:var(--ink);white-space:nowrap}
+.pc .lvb{background:var(--court-line);color:var(--court-deep)}
+.empty-f{grid-column:1/-1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;position:relative;z-index:2;padding:16px;background:var(--court-deep)}
+.empty-f p{margin:0;font-family:var(--f-display);font-size:15px;opacity:.9}
+.cbtn{min-height:42px;border-radius:9px;padding:8px 10px;font-weight:600;background:var(--court-line);color:var(--court-deep)}
+.cbtn.alt{background:var(--court-chip);color:var(--court-ink);font-weight:500}
+.cbtn.armed{background:var(--loss);color:#fff}
+.wins{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.ctools{display:flex;gap:6px;flex-wrap:wrap;align-items:center}
+.ctools .cbtn{flex:1 1 auto}
+.stepper{display:flex;align-items:center;gap:2px;background:var(--court-chip);border-radius:9px;padding:2px;font-family:var(--f-display);font-variant-numeric:tabular-nums}
+.stepper button{width:34px;height:38px;color:var(--court-ink);font-size:18px}
+.stepper span{min-width:70px;text-align:center;font-size:13px}
+.streak{font-size:12px;background:var(--shuttle);color:#1b1404;border-radius:5px;padding:0 6px;font-weight:600}
+.q{display:flex;flex-direction:column;gap:6px}
+.qi{display:grid;grid-template-columns:28px minmax(0,1fr) auto;align-items:center;gap:10px;background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:8px 10px}
+.qn{font-family:var(--f-display);font-weight:700;color:var(--muted);font-variant-numeric:tabular-nums;text-align:center}
+.qm{min-width:0}.qm b{font-weight:600}
+.sub{font-size:12.5px;color:var(--muted);font-variant-numeric:tabular-nums}
+.next{border:1.5px dashed var(--line);border-radius:12px;padding:10px 12px;display:flex;flex-direction:column;gap:4px}
+.next .vs{font-family:var(--f-display);font-weight:600}
+.banner{background:var(--surface);border:1px solid var(--shuttle);border-radius:12px;padding:12px 14px;display:flex;flex-direction:column;gap:8px}
+.banner p{margin:0;font-size:14px}
+.picks{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px}
+.pick{display:flex;justify-content:space-between;align-items:center;gap:6px;min-height:44px;padding:6px 10px;border-radius:9px;border:1px solid var(--line);background:var(--surface);text-align:left}
+.pick span:first-child{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0;font-weight:500}
+.pick[aria-pressed="true"]{border-color:var(--accent);box-shadow:inset 0 0 0 1px var(--accent);background:color-mix(in srgb,var(--accent) 10%,var(--surface))}
+.lvchips{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:4px}
+.lvc{min-height:40px;border-radius:8px;border:1px solid var(--line);background:var(--surface);font-family:var(--f-display);font-weight:600;font-size:12.5px;padding:0 2px}
+.lvc[aria-pressed="true"]{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:9px;overflow:hidden;background:var(--surface);flex-wrap:wrap}
+.seg button{min-height:38px;padding:4px 12px;font-size:14px;border-right:1px solid var(--line)}
+.seg button:last-child{border-right:0}
+.seg button[aria-pressed="true"]{background:var(--ink);color:var(--bg)}
+input[type=text],input[type=number],input[type=search],textarea,select{background:var(--surface);border:1px solid var(--line);border-radius:9px;padding:8px 10px;min-height:42px;width:100%;box-sizing:border-box}
+textarea{min-height:110px;resize:vertical}
+label.f{display:flex;flex-direction:column;gap:4px;font-size:13px;color:var(--muted);min-width:0}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.three{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px}
+.qa{display:flex;flex-direction:column;gap:6px}
+.qa .qt{font-weight:600;font-size:14.5px}
+.opts{display:flex;flex-direction:column;gap:4px}
+.opt{text-align:left;min-height:40px;padding:6px 10px;border-radius:8px;border:1px solid var(--line);background:var(--surface);font-size:14px}
+.opt[aria-pressed="true"]{border-color:var(--accent);background:color-mix(in srgb,var(--accent) 12%,var(--surface));font-weight:600}
+.result{display:flex;align-items:center;justify-content:space-between;gap:10px;background:var(--chip);border-radius:10px;padding:10px 12px}
+.result .big{font-size:26px}
+.plist{display:flex;flex-direction:column;gap:8px}
+.prow{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:10px 12px;display:flex;flex-direction:column;gap:8px}
+.ptop{display:flex;justify-content:space-between;align-items:center;gap:8px}
+.ptop b{font-weight:600;font-size:16px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0}
+.tag{font-size:12px;font-weight:600;color:var(--accent)}
+.tbl-wrap{overflow-x:auto}
+table{border-collapse:collapse;width:100%;font-variant-numeric:tabular-nums;font-size:14px}
+th,td{padding:7px 6px;text-align:right;border-bottom:1px solid var(--line);white-space:nowrap}
+th:first-child,td:first-child{text-align:left}
+th{font-size:12px;color:var(--muted);font-weight:500}
+td.up{color:var(--accent)} td.dn{color:var(--loss)}
+.tiles{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+.tile{background:var(--chip);border-radius:10px;padding:10px 12px;display:flex;flex-direction:column;gap:2px;min-width:0}
+.tile .k{font-size:12.5px;color:var(--muted)}
+.tile .v{font-family:var(--f-display);font-size:22px;font-weight:700;font-variant-numeric:tabular-nums;line-height:1.2}
+.tile.hl{background:color-mix(in srgb,var(--shuttle) 22%,var(--surface))}
+.big{font-family:var(--f-display);font-weight:700;font-variant-numeric:tabular-nums}
+.led{display:flex;flex-direction:column;gap:8px}
+.ledi{border:1px solid var(--line);border-radius:10px;padding:10px 12px;display:flex;flex-direction:column;gap:6px;background:var(--surface)}
+.ledi .lt{display:flex;justify-content:space-between;gap:8px;align-items:baseline;flex-wrap:wrap}
+.ledi .lt b{font-family:var(--f-display)}
+.hist{display:flex;flex-direction:column;gap:6px}
+.hi{font-size:13.5px;border-left:3px solid var(--line);padding:2px 0 2px 10px}
+.hi .w{font-weight:600}
+.bar{height:8px;border-radius:4px;background:var(--chip);overflow:hidden}
+.bar i{display:block;height:100%;background:var(--shuttle)}
+.tabs{position:fixed;left:0;right:0;bottom:0;z-index:8;background:var(--surface);border-top:1px solid var(--line);padding-bottom:env(safe-area-inset-bottom,0px)}
+.tabs .in{display:grid;grid-template-columns:repeat(5,1fr)}
+.scb{display:flex;flex-direction:column;gap:6px}
+.scr{display:grid;grid-template-columns:auto minmax(0,1fr) auto minmax(0,1fr);gap:8px;align-items:center;font-family:var(--f-display);font-size:14px}
+.scr input{background:var(--court-line);color:var(--court-deep);border:0;text-align:center;font-family:var(--f-display);font-size:20px;font-weight:700;min-height:44px;padding:4px}
+.qrbox{background:#fff;padding:12px;border-radius:12px;display:inline-block;line-height:0;align-self:center}
+.qrbox img,.qrbox canvas{display:block;max-width:100%;height:auto}
+.center{display:flex;flex-direction:column;align-items:center;gap:8px;text-align:center}
+.sync{background:var(--shuttle);color:#1b1404;font-size:13px;font-weight:600;padding:4px 0;text-align:center}
+.kiosk .pick{min-height:56px;font-size:16px}
+.evc{border:1px solid var(--line);border-radius:10px;padding:10px 12px;display:flex;flex-direction:column;gap:8px}
+.rs{display:flex;flex-wrap:wrap;gap:6px}
+.rsc{min-height:36px;padding:4px 10px;border-radius:18px;border:1px solid var(--line);background:var(--surface);font-size:14px}
+.rsc.y{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+.rsc.n{text-decoration:line-through;color:var(--muted);background:var(--chip)}
+.viewer .adm,.viewer .wins,.viewer .ctools,.viewer .scb,.viewer .empty-f .cbtn{display:none!important}
+.viewer .pc{pointer-events:none}
+.recap img{width:100%;border-radius:10px;display:block}
+.podium{display:grid;grid-template-columns:1fr 1fr 1fr;align-items:end;gap:8px;padding-top:6px}
+.pod{display:flex;flex-direction:column;align-items:center;gap:6px;min-width:0;text-align:center}
+.pod .pn{font-weight:600;font-size:14.5px;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.pod .ps{font-size:12px;color:var(--muted);font-variant-numeric:tabular-nums}
+.step{width:100%;border-radius:8px 8px 0 0;display:flex;align-items:flex-start;justify-content:center;padding-top:8px;font-family:var(--f-display);font-weight:700;font-size:20px;color:#fff}
+.pod.g .step{height:96px;background:var(--gold)}.pod.s .step{height:70px;background:var(--silver)}.pod.b .step{height:52px;background:var(--bronze)}
+.medal{width:34px;height:34px;border-radius:50%;display:grid;place-items:center;font-family:var(--f-display);font-weight:700;font-size:15px;color:#fff;box-shadow:inset 0 0 0 3px rgba(255,255,255,.35)}
+.medal.g{background:var(--gold)}.medal.s{background:var(--silver)}.medal.b{background:var(--bronze)}
+.mtally{display:inline-flex;gap:6px;align-items:center;font-variant-numeric:tabular-nums}
+.mtally i{display:inline-block;width:12px;height:12px;border-radius:50%;margin-right:2px;vertical-align:-1px}
+.mtally .g i{background:var(--gold)}.mtally .s i{background:var(--silver)}.mtally .b i{background:var(--bronze)}
+td.rk{font-family:var(--f-display);font-weight:700;color:var(--muted)}
+tr.top td:first-child{color:var(--ink)}
+.tab{min-height:58px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;font-size:12px;color:var(--muted)}
+.tab svg{width:22px;height:22px}
+.tab[aria-current="page"]{color:var(--accent);font-weight:600}
+.toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(72px + env(safe-area-inset-bottom,0px));z-index:9;background:var(--ink);color:var(--bg);padding:9px 14px;border-radius:10px;font-size:14px;max-width:calc(100% - 32px);text-align:center}
+@media (prefers-reduced-motion:no-preference){.toast{animation:pop .18s ease-out}@keyframes pop{from{opacity:0;transform:translate(-50%,6px)}}}
+
+:root{padding-top:env(safe-area-inset-top,0px)}
+[hidden]{display:none!important}
+img{max-width:100%}
+body{margin:0}
+*,*::before,*::after{box-sizing:border-box}
+</style>
+</head>
+<body>
+
+<header class="top"><div class="in" id="hdr"></div><div id="sync" class="sync" hidden></div></header>
+<main><div class="in" id="view"></div></main>
+<nav class="tabs"><div class="in" id="tabs"></div></nav>
+<div id="toast" class="toast" hidden></div>
+<input type="file" id="restoreFile" accept=".json,application/json" hidden>
+
+<script>
+/* =================== i18n =================== */
+const T={
+brand:['ก๊วนแบด','Badminton Club','バドミントン会'],
+t_play:['คอร์ท','Courts','コート'],t_players:['ผู้เล่น','Players','メンバー'],t_acct:['บัญชี','Accounts','会計'],t_set:['ตั้งค่า','Settings','設定'],
+c_in:['มา','In','参加'],c_play:['เล่น','Playing','試合中'],c_wait:['รอ','Waiting','待ち'],c_rest:['พัก','Resting','休憩'],
+loading:['กำลังโหลดฐานข้อมูล…','Loading database…','データベースを読み込み中…'],
+setupTitle:['เริ่มก๊วนวันนี้','Start today\'s session','今日の練習を始める'],
+courtsQ:['ใช้กี่คอร์ท','How many courts','コート数'],
+format:['รูปแบบ','Format','形式'],doubles:['คู่ (4 คน)','Doubles (4)','ダブルス (4人)'],singles:['เดี่ยว (2 คน)','Singles (2)','シングルス (2人)'],
+modeQ:['วิธีจัดคู่','Matching style','組み合わせ方法'],
+courtFee:['ค่าคอร์ทรวม','Total court fee','コート代 合計'],shPrice:['ราคาลูกละ','Price per shuttle','シャトル1個の値段'],
+whoCame:['ใครมาบ้าง','Who\'s here','今日の参加者'],selAll:['เลือกทั้งหมด','Select all','全員選択'],selNone:['ล้าง','Clear','解除'],
+startBtn:['เริ่มเล่น ({n} คน · {c} คอร์ท)','Start ({n} players · {c} courts)','開始（{n}人・{c}面）'],
+noPlayersYet:['ยังไม่มีรายชื่อในฐานข้อมูล เพิ่มผู้เล่นและให้แต่ละคนประเมินฝีมือตัวเองก่อน แล้วค่อยกลับมาเริ่มก๊วน','No players in the database yet. Add players and let each one rate their own skill, then come back to start.','まだメンバーがいません。メンバーを追加して各自レベルを自己評価してから、ここで開始してください。'],
+goAdd:['ไปเพิ่มผู้เล่น','Add players','メンバーを追加'],
+needMore:['ต้องเลือกอย่างน้อย {n} คน','Pick at least {n} players','{n}人以上選んでください'],
+started:['เริ่มก๊วนแล้ว จัดลงคอร์ทให้แล้ว','Session started. Courts are filled.','練習開始。コートに組みました。'],
+m_balanced:['สมดุล','Balanced','バランス'],
+d_balanced:['แบ่งทีมให้ฝีมือรวมสองฝั่งใกล้กันที่สุด คนที่รอนานที่สุดได้ลงก่อนเสมอ','Splits teams so both sides have close total skill. Whoever waited longest plays next.','両チームの合計レベルが近くなるよう分けます。待ち時間が長い人が優先。'],
+m_level:['ระดับใกล้กัน','Same level','レベル別'],
+d_level:['จับคนฝีมือใกล้กันลงคอร์ทเดียวกัน มือใหม่เจอมือใหม่ มือดีเจอมือดี','Puts similar levels on the same court: beginners together, strong players together.','近いレベル同士を同じコートに。初心者は初心者同士、上級者は上級者同士。'],
+m_mixed:['คู่ผสม','Mixed','ミックス'],
+d_mixed:['จับชาย-หญิงอยู่ทีมเดียวกันเท่าที่ทำได้ และยังแบ่งทีมให้สมดุล','Pairs a man and a woman on each team where possible, still balanced.','できるだけ男女ペアにし、バランスも保ちます。'],
+m_random:['สุ่ม','Random','ランダム'],
+d_random:['สุ่มคู่จากคนที่รอนาน ได้เจอคนใหม่ ๆ แต่ยังเรียงตามคิว','Random pairs among those who waited longest. Meet new partners.','待ち時間の長い人からランダムに。いろんな人と組めます。'],
+m_winner:['ชนะอยู่ต่อ','Winners stay','勝ち残り'],
+d_winner:['ทีมชนะอยู่บนคอร์ทต่อ ชนะติด 2 เกมแล้วลงพักให้คิวถัดไป','The winning team stays on. After 2 wins in a row they rest.','勝ったチームは残ります。2連勝したら交代。'],
+modeNote:['ทุกโหมดเลี่ยงคู่หูซ้ำและคู่แข่งซ้ำให้อัตโนมัติ','Every mode avoids repeat partners and opponents.','どのモードも同じペア・同じ相手の繰り返しを避けます。'],
+fillAll:['จัดลงคอร์ทว่างทั้งหมด','Fill all empty courts','空きコートに全部組む'],
+share:['คัดลอกส่งไลน์','Copy for chat','LINE用にコピー'],
+court:['คอร์ท','Court','コート'],free:['ว่าง','Free','空き'],
+startHere:['จัดคู่ลงคอร์ทนี้','Make a match here','このコートで組む'],
+minAgo:['{m} นาที','{m} min','{m}分'],skill:['ฝีมือรวม','Skill','合計'],
+leftWin:['ฝั่งซ้ายชนะ','Left wins','左の勝ち'],rightWin:['ฝั่งขวาชนะ','Right wins','右の勝ち'],
+shN:['ลูก {n}','{n} shuttle(s)','シャトル {n}'],
+noRes:['จบ ไม่นับผล','End, no result','結果なしで終了'],reshuffle:['สุ่มคู่ใหม่','Reshuffle','組み直し'],
+cancel:['ยกเลิก','Cancel','取消'],tapAgain:['แตะอีกครั้ง','Tap again','もう一度'],champ:['แชมป์อยู่ต่อ','Staying on','勝ち残り'],
+undo:['ย้อนผลล่าสุด','Undo last result','直前の結果を取り消す'],
+queue:['คิวรอ','Queue','待ち順'],queueHint:['{n} คน · เรียงตามเวลารอ','{n} · by wait time','{n}人・待ち時間順'],
+nextPred:['คู่ถัดไป (คาดการณ์เมื่อมีคอร์ทว่าง)','Next match (when a court frees up)','次の組み合わせ（コートが空いたら）'],
+waited:['รอ {m} นาที · เล่นแล้ว {g} เกม','waiting {m} min · {g} games','待ち{m}分・{g}試合'],
+subIn:['ลงแทน','Sub in','交代'],
+selHint:['เลือก {n} แล้ว แตะชื่อในคอร์ทเพื่อสลับ หรือกด "ลงแทน" ที่คนในคิว','{n} selected. Tap a name on court to swap, or "Sub in" from the queue.','{n}を選択中。コートの名前をタップで入れ替え、または待ち列の「交代」。'],
+unsel:['ยกเลิกการเลือก','Clear selection','選択解除'],
+noQueue:['ไม่มีใครรอ','Nobody waiting','待っている人はいません'],
+courtsNow:['จำนวนคอร์ท','Courts','コート数'],
+endSession:['จบก๊วนและบันทึกบัญชี','End session & save accounts','練習を終了して会計に保存'],
+endConfirm:['แตะอีกครั้งเพื่อจบก๊วน','Tap again to end','もう一度タップで終了'],
+ended:['จบก๊วนแล้ว นี่คืออันดับวันนี้ ส่วนยอดเงินอยู่ในแท็บบัญชี','Session ended. Here is today\'s podium; money is in Accounts.','練習終了。今日の表彰台です。会計は会計タブへ。'],
+notEnough:['คนรอไม่พอ ต้องมีอย่างน้อย {n} คน','Not enough players waiting (need {n})','待ちが足りません（{n}人必要）'],
+filled:['จัดลง {n} คอร์ทแล้ว','Filled {n} court(s)','{n}面に組みました'],
+noFill:['ไม่มีคอร์ทว่าง หรือคนรอไม่พอ','No free court or not enough players','空きコートがないか、人数不足です'],
+savedRes:['บันทึกผลแล้ว จัดคู่ถัดไปให้แล้ว','Result saved. Next match is on.','結果を保存し、次の試合を組みました'],
+endedNoRes:['จบเกมแล้ว (ไม่นับแพ้ชนะ)','Game ended (no result)','試合終了（結果なし）'],
+swapped:['สลับแล้ว','Swapped','入れ替えました'],undone:['ย้อนแล้ว','Undone','取り消しました'],
+copied:['คัดลอกแล้ว วางในแชทได้เลย','Copied. Paste it in your group chat.','コピーしました。グループに貼り付けてください。'],
+copyManual:['คัดลอกข้อความนี้ด้วยตัวเอง','Copy this text yourself','このテキストを手動でコピーしてください'],close:['ปิด','Close','閉じる'],
+courtsBusy:['คอร์ทสุดท้ายยังเล่นอยู่','The last court is still playing','最後のコートが試合中です'],
+addPlayer:['เพิ่มผู้เล่น','Add player','メンバー追加'],editPlayer:['แก้ไขผู้เล่น','Edit player','メンバー編集'],
+name:['ชื่อ','Name','名前'],namePh:['ชื่อเล่น เช่น ต้น','Nickname','ニックネーム'],
+gender:['เพศ','Gender','性別'],g_none:['ไม่ระบุ','Not set','未設定'],g_M:['ชาย','Male','男性'],g_F:['หญิง','Female','女性'],gs_M:['ช','M','男'],gs_F:['ญ','F','女'],
+selfAssess:['ประเมินฝีมือตัวเอง','Rate your own skill','レベル自己評価'],
+assessIntro:['ตอบ 5 ข้อ ระบบจะคำนวณระดับเริ่มต้นให้ หลังจากนั้นระดับจะปรับตามผลแข่งจริง','Answer 5 questions for a starting level. After that it adjusts from real results.','5問に答えると初期レベルが決まり、その後は実際の結果で調整されます。'],
+yourLevel:['ระดับที่ได้','Your level','判定レベル'],answerAll:['ตอบให้ครบ 5 ข้อ','Answer all 5','5問すべて回答'],
+override:['หรือเลือกระดับเอง','Or pick a level directly','または直接選ぶ'],
+save:['บันทึก','Save','保存'],edit:['แก้ไข','Edit','編集'],del:['ลบ','Delete','削除'],confirm:['ยืนยัน','Confirm','確認'],
+roster:['ฐานข้อมูลผู้เล่น','Player database','メンバー一覧'],rosterHint:['{n} คน · ไม่จำกัดจำนวน','{n} players · no limit','{n}人・人数無制限'],
+lifetime:['{g} เกม · ชนะ {w} · ระดับ {lv}','{g} games · {w} wins · level {lv}','{g}試合・{w}勝・レベル{lv}'],
+selfRated:['ประเมินตัวเอง: {lv}','Self-rated: {lv}','自己評価: {lv}'],
+st_in:['มา','In','参加'],st_rest:['พัก','Rest','休憩'],st_out:['กลับ','Left','帰宅'],
+notToday:['ไม่ได้มาวันนี้','Not here today','今日は不参加'],checkIn:['เช็คอินวันนี้','Check in today','今日参加'],
+playingNow:['กำลังเล่น','Playing','試合中'],
+emptyRoster:['ยังไม่มีผู้เล่น กด "เพิ่มผู้เล่น" แล้วให้แต่ละคนประเมินตัวเอง','No players yet. Tap "Add player" and let each person rate themselves.','まだいません。「メンバー追加」から各自で自己評価してください。'],
+nameNeeded:['พิมพ์ชื่อก่อน','Enter a name first','名前を入力してください'],
+added:['บันทึก {n} แล้ว','Saved {n}','{n}を保存しました'],
+search:['ค้นหาชื่อ','Search name','名前で検索'],
+bulk:['เพิ่มหลายคนพร้อมกัน','Add many at once','まとめて追加'],bulkHide:['ซ่อน','Hide','閉じる'],
+bulkPh:['บรรทัดละคน ใส่ระดับและเพศต่อท้ายได้\nต้น N ช\nฝน S ญ\nบอส P','One per line, level and gender optional\nKen N M\nAmy S F\nTom P','1行に1人、レベル・性別は任意\nケン N 男\nあや S 女\nたく P'],
+bulkHint:['ระดับ: มือใหม่ BG N S P- P P+ · เพศ: ช/ญ · ไม่ใส่ = N','Levels: Newbie BG N S P- P P+ · gender M/F · default N','レベル: 初心者 BG N S P- P P+ ・性別 男/女 ・省略時 N'],
+addAll:['เพิ่มทั้งหมด','Add all','すべて追加'],none:['ไม่พบรายชื่อ','No names found','名前が見つかりません'],
+acctToday:['ก๊วนวันนี้','Today\'s session','今日の練習'],
+k_games:['เกมที่เล่น','Games played','試合数'],k_sh:['ลูกที่ใช้','Shuttles used','使用シャトル'],
+k_shpg:['ลูกต่อ 1 เกม','Shuttles per game','1試合あたりのシャトル'],k_cost:['ค่าใช้จ่ายรวม','Total cost','合計費用'],
+k_courtCost:['ค่าคอร์ท','Court fee','コート代'],k_shCost:['ค่าลูก','Shuttle cost','シャトル代'],
+h_name:['ชื่อ','Name','名前'],h_games:['เกม','Games','試合'],h_court:['คอร์ท','Court','コート'],h_sh:['ลูก','Shuttle','シャトル'],h_total:['รวม','Total','合計'],h_w:['ชนะ','W','勝'],h_l:['แพ้','L','敗'],h_lv:['ระดับ','Level','レベル'],
+billNote:['ค่าคอร์ทหารเท่ากันทุกคนที่มา · ค่าลูกคิดตามเกมที่แต่ละคนลงเล่น (เกมคู่หาร 4)','Court fee split equally · shuttle cost follows the games each person played (÷4 in doubles)','コート代は均等割り・シャトル代は出た試合分（ダブルスは4等分）'],
+copyBill:['คัดลอกบิล','Copy bill','精算をコピー'],noSession:['ยังไม่ได้เริ่มก๊วน','No session running','練習は始まっていません'],
+perCourt:['ลูกต่อคอร์ท','Shuttles per court','コートあたり'],
+history:['ประวัติบัญชี','Account history','会計履歴'],allTime:['รวมทุกครั้ง','All sessions','通算'],
+k_sessions:['จำนวนครั้ง','Sessions','回数'],k_avgshpg:['เฉลี่ยลูกต่อเกม','Avg shuttles per game','平均シャトル/試合'],
+k_collected:['เก็บเงินรวม','Total collected','集金合計'],
+ledLine:['{p} คน · {c} คอร์ท · {g} เกม · {s} ลูก ({spg} ลูก/เกม)','{p} players · {c} courts · {g} games · {s} shuttles ({spg}/game)','{p}人・{c}面・{g}試合・シャトル{s}個（{spg}個/試合）'],
+details:['ดูรายคน','Per person','個人別'],
+noHistory:['ยังไม่มีประวัติ จบก๊วนครั้งแรกแล้วจะบันทึกที่นี่','No history yet. It appears here after you end a session.','履歴はまだありません。練習を終了するとここに記録されます。'],
+stock:['สต็อกลูกแบด','Shuttle stock','シャトル在庫'],k_left:['เหลือ','In stock','残り'],k_bought:['ซื้อมาแล้ว','Bought','購入済み'],k_used:['ใช้ไปแล้ว','Used','使用済み'],
+logBuy:['บันทึกการซื้อลูก','Log a purchase','購入を記録'],tubes:['จำนวนหลอด','Tubes','筒数'],perTube:['ลูก/หลอด','Per tube','1筒の個数'],tubePrice:['ราคา/หลอด','Price/tube','1筒の値段'],
+avgCost:['ต้นทุนเฉลี่ยลูกละ {v}','Avg cost per shuttle {v}','1個あたり平均 {v}'],useAvg:['ใช้ราคาเฉลี่ยจากสต็อก','Use stock average','在庫平均を使う'],
+buyLine:['{t} หลอด × {p} ลูก · {v}','{t} tubes × {p} · {v}','{t}筒 × {p}個・{v}'],
+lowStock:['ลูกเหลือน้อย ควรซื้อเพิ่ม','Running low on shuttles','シャトルが残り少ないです'],
+recent:['เกมล่าสุด','Recent games','最近の試合'],rank:['อันดับวันนี้','Today\'s ranking','今日の成績'],
+noGames:['ยังไม่มีเกมที่บันทึกผล','No recorded games yet','まだ試合記録はありません'],
+lang:['ภาษา','Language','言語'],autoAdj:['ปรับระดับฝีมือตามผลแข่ง','Adjust levels from results','結果でレベルを自動調整'],
+on:['เปิด','On','オン'],off:['ปิด','Off','オフ'],currency:['สกุลเงิน','Currency','通貨'],
+howTitle:['ระบบจัดคู่ทำงานยังไง','How matching works','組み合わせの仕組み'],
+how1:['เรียงคิวตามเวลารอ คนรอนานสุดได้ลงก่อน คนมาสายต่อท้ายคิว','The queue goes by wait time. Latecomers join at the back.','待ち時間順。遅れて来た人は最後尾に並びます。'],
+how2:['ดึงคนหัวคิวกับผู้สมัครอีก 4–6 คน แล้วลองทุกชุดและทุกวิธีแบ่งทีม','Takes the head of the queue plus 4–6 candidates and tries every group and team split.','先頭の人と候補4〜6人で、すべての組と分け方を試します。'],
+how3:['ให้คะแนนจากความต่างฝีมือสองฝั่ง ความห่างระดับ คู่หูซ้ำ คู่แข่งซ้ำ และเพศ (โหมดคู่ผสม) แล้วเลือกแบบที่ดีที่สุด','Scores each by skill gap, level spread, repeat partners, repeat opponents and gender (Mixed), then picks the best.','両チームの差、レベル差、同じペア・相手の回数、性別（ミックス）で採点し最良を選びます。'],
+how4:['ชนะทีมที่เก่งกว่าได้ระดับเพิ่มมาก ชนะทีมที่อ่อนกว่าได้เพิ่มน้อย จึงแม่นขึ้นเรื่อย ๆ','Beating a stronger team raises your level more than beating a weaker one, so matches get more accurate over time.','強いチームに勝つほどレベルが大きく上がり、だんだん正確になります。'],
+dataTitle:['ข้อมูลและการสำรอง','Data & backup','データとバックアップ'],
+dataDb:['ข้อมูลอยู่ในฐานข้อมูล Firebase ของคุณเอง ไม่มีวันหมดอายุ เปิดจากเครื่องไหนก็เห็นข้อมูลเดียวกัน และใช้ต่อได้ตอนเน็ตหลุด','Data lives in your own Firebase database. It never expires, looks the same on every device and keeps working offline.','データはあなたのFirebaseに保存されます。期限切れなし、どの端末でも同じで、オフラインでも使えます。'],
+dataLocal:['ตอนนี้ใช้แบบเครื่องเดียว ข้อมูลอยู่ในเครื่องนี้เท่านั้น เชื่อม Firebase เพื่อให้คนอื่นสแกนเข้าได้','Single-device mode: data stays on this device. Connect Firebase so others can scan in.','この端末のみのモードです。他の人が参加するにはFirebaseに接続してください。'],
+backup:['สำรองข้อมูล (.json)','Back up (.json)','バックアップ (.json)'],restore:['นำเข้าข้อมูลสำรอง','Restore backup','バックアップを復元'],
+exportCsv:['ส่งออกบัญชี (.csv)','Export accounts (.csv)','会計を書き出し (.csv)'],
+restored:['นำเข้า {n} รายการแล้ว','Restored {n} items','{n}件を復元しました'],badFile:['ไฟล์นี้ไม่ใช่ข้อมูลสำรองของแอพนี้','This file isn\'t a backup from this app','このアプリのバックアップではありません'],
+saveDone:['บันทึกไฟล์แล้ว','File saved','保存しました'],saveNo:['ยกเลิกการบันทึกไฟล์','Save cancelled','保存をキャンセルしました'],
+discard:['ยกเลิกก๊วนที่เล่นอยู่ (ไม่บันทึกบัญชี)','Discard current session (no accounts)','現在の練習を破棄（会計なし）'],
+discarded:['ยกเลิกก๊วนแล้ว','Session discarded','練習を破棄しました'],
+readOnly:['โหมดผู้เล่น: ดูคอร์ท ลงชื่อ ประเมินฝีมือ ตอบนัด และแจ้งโอนได้ การจัดการอื่นต้องใส่ PIN ผู้จัดในแท็บตั้งค่า','Player mode: view courts, check in, rate yourself, RSVP and report payments. Everything else needs the organizer PIN in Settings.','プレーヤーモード：コート表示・受付・自己評価・出欠・支払い報告ができます。その他は設定タブで主催者PINが必要です。'],
+saveFail:['บันทึกไม่สำเร็จ ลองอีกครั้ง','Couldn\'t save. Try again.','保存できませんでした。もう一度お試しください。'],
+quota:['ฐานข้อมูลเต็ม ลบประวัติบัญชีเก่าบางส่วนก่อน','Database is full. Delete some old account history first.','データベースが満杯です。古い会計履歴を削除してください。'],
+shareTitle:['จัดคู่ก๊วนแบด','Badminton matches','バドミントン組み合わせ'],upNext:['คิวต่อไป','Up next','次'],
+billTitle:['ค่าก๊วนแบด','Badminton costs','バドミントン代'],
+billSum:['ค่าคอร์ท {c} · ลูก {s} ลูก × {p}','Court {c} · {s} shuttles × {p}','コート{c}・シャトル{s}個×{p}'],
+deleted:['ลบแล้ว','Deleted','削除しました'],removed:['(ลบแล้ว)','(deleted)','(削除済み)'],
+feeHow:['คิดค่าคอร์ทแบบ','Court fee type','コート代の計算'],fee_total:['ราคารวม','Total','合計額'],fee_hourly:['ต่อคอร์ท/ชม.','Per court/hour','1面1時間'],
+courtRate:['ราคาต่อคอร์ทต่อชั่วโมง','Price per court per hour','1面1時間の料金'],hours:['จำนวนชั่วโมง','Hours','時間'],
+courtCalc:['ค่าคอร์ท {r} × {c} คอร์ท × {h} ชม. = {v}','Court fee {r} × {c} courts × {h} h = {v}','コート代 {r} × {c}面 × {h}時間 = {v}'],
+payHow:['เก็บเงินต่อคนแบบ','How each person pays','1人あたりの集金方法'],
+pay_usage:['ตามลูกที่ใช้','By shuttles used','シャトル使用分'],pd_usage:['ค่าคอร์ทหารเท่ากันทุกคน ค่าลูกคิดตามเกมที่แต่ละคนเล่น (เกมคู่หาร 4)','Court fee split equally; shuttles charged by the games each person played (÷4 in doubles).','コート代は均等、シャトル代は出た試合分（ダブルスは4等分）。'],
+pay_equal:['หารเท่ากัน','Split equally','均等割り'],pd_equal:['รวมค่าคอร์ทกับค่าลูก แล้วหารเท่ากันทุกคนที่มา','Court and shuttle costs added together and split equally among everyone who came.','コート代とシャトル代の合計を参加者で均等割り。'],
+pay_games:['ตามจำนวนเกม','By games played','試合数で按分'],pd_games:['ค่าใช้จ่ายทั้งหมดหารตามสัดส่วนเกมที่เล่น ใครเล่นเยอะจ่ายเยอะ','Total cost shared by games played. More games, bigger share.','総費用を試合数で按分。多く出た人ほど多く払います。'],
+pay_flat:['เหมาต่อคน','Flat fee','1人定額'],pd_flat:['ทุกคนจ่ายเท่ากันตามราคาที่ตั้ง แอพบอกว่าเงินที่เก็บเกินหรือขาดจากค่าใช้จ่ายจริงเท่าไหร่','Everyone pays the set amount. The app shows whether it covers the real cost.','全員が決めた額を払います。実費に対する過不足も表示します。'],
+flatAmt:['ค่าก๊วนต่อคนต่อครั้ง','Fee per person per session','1人1回の参加費'],
+courtNames:['หมายเลขคอร์ท (ไม่ใส่ก็ได้)','Court numbers (optional)','コート番号（任意）'],courtNamesPh:['เช่น 5, 6, 7','e.g. 5, 6, 7','例: 5, 6, 7'],
+estPer:['ค่าคอร์ทตกคนละประมาณ {v} (จาก {n} คน) บวกค่าลูกตามที่ใช้','Court fee about {v} each ({n} players), plus shuttles','コート代は1人約{v}（{n}人）＋シャトル代'],
+estFlat:['คนละ {v} · {n} คน = {t} · ค่าคอร์ท {c}','{v} each · {n} players = {t} · court {c}','1人{v}・{n}人で{t}・コート代{c}'],
+perPersonPay:['แต่ละคนต้องจ่าย','What each person pays','1人あたりの支払額'],
+k_toCollect:['ต้องเก็บรวม','To collect','集金予定'],k_paid:['จ่ายแล้ว','Paid','支払済み'],k_owed:['ยังค้าง','Outstanding','未払い'],
+balOver:['เก็บเกินค่าใช้จ่ายจริง {v}','{v} more than the actual cost','実費より{v}多い'],balUnder:['เก็บขาดจากค่าใช้จ่ายจริง {v}','{v} short of the actual cost','実費より{v}不足'],balEven:['เก็บพอดีกับค่าใช้จ่ายจริง','Covers the actual cost exactly','実費とちょうど同じ'],
+paidY:['จ่ายแล้ว','Paid','済'],paidN:['ยังไม่จ่าย','Unpaid','未'],tapPaid:['แตะชื่อเมื่อจ่ายแล้ว','Tap when someone pays','支払ったらタップ'],
+owedTitle:['ค้างจ่าย (ทุกครั้ง)','Unpaid (all sessions)','未払い（全回）'],noOwed:['ไม่มีใครค้างจ่าย','Nobody owes anything','未払いはありません'],
+owedLine:['{n} ครั้ง','{n} session(s)','{n}回'],
+t_rank:['อันดับ','Ranking','順位'],r_today:['วันนี้','Today','今日'],r_all:['สะสม','All-time','通算'],r_past:['แต่ละครั้ง','By session','回ごと'],
+podLive:['อันดับวันนี้ (อัปเดตสด)','Today\'s ranking (live)','今日の順位（ライブ）'],lastResult:['ผลก๊วนล่าสุด · {d}','Last session · {d}','前回の結果・{d}'],
+gold:['ทอง','Gold','金'],silver:['เงิน','Silver','銀'],bronze:['ทองแดง','Bronze','銅'],
+rankRule:['เรียงตามเกมที่ชนะ แล้วตาม % ชนะ แล้วตามระดับที่เพิ่มขึ้นในวันนั้น','Ranked by wins, then win rate, then level gained that day','勝利数→勝率→その日のレベル上昇の順'],
+allRule:['เรียงตามเหรียญทอง เงิน ทองแดง แล้วตามเกมที่ชนะรวม','Ranked by gold, then silver, then bronze, then total wins','金→銀→銅→通算勝利数の順'],
+h_pct:['% ชนะ','Win %','勝率'],h_dlv:['ระดับ ±','Level ±','レベル±'],h_medals:['เหรียญ','Medals','メダル'],h_sess:['ครั้ง','Sessions','回'],h_rank:['#','#','#'],
+noRank:['ยังไม่มีผลแข่ง บันทึกผลเกมแล้วอันดับจะขึ้นที่นี่','No results yet. Rankings appear once games are recorded.','まだ結果がありません。試合を記録すると表示されます。'],
+noAll:['จบก๊วนครั้งแรกแล้วอันดับสะสมจะเริ่มนับ','All-time rankings start after your first finished session.','最初の練習を終えると通算ランキングが始まります。'],
+copyRank:['คัดลอกอันดับส่งไลน์','Copy ranking for chat','順位をLINE用にコピー'],rankTitle:['อันดับก๊วนแบด','Badminton ranking','バドミントン順位'],
+wl:['ชนะ {w} แพ้ {l}','{w}W {l}L','{w}勝{l}敗'],
+scoring:['บันทึกผลแบบ','Result entry','結果の記録'],sc_quick:['กดผู้ชนะ','Tap winner','勝者のみ'],sc_bo1:['แต้ม 1 เกม','Score · 1 game','スコア1ゲーム'],sc_bo3:['แต้ม 2 ใน 3','Score · best of 3','スコア3ゲーム'],
+gameN:['เกม {n}','Game {n}','第{n}G'],saveScore:['บันทึกแต้ม','Save score','スコア保存'],scoreInvalid:['ใส่แต้มให้ครบและต้องมีผู้ชนะ','Enter scores with a clear winner','勝敗がわかるようにスコアを入力してください'],
+h_pd:['แต้ม±','Pts±','得失点'],leftSide:['ฝั่งซ้าย','Left','左'],rightSide:['ฝั่งขวา','Right','右'],
+plan:['วางคู่ถัดไปเอง','Plan next match','次の試合を組む'],planAuto:['เพิ่มคู่ที่แนะนำ','Add suggested','おすすめを追加'],
+planned:['คู่ที่วางไว้ (ลงก่อนเมื่อคอร์ทว่าง)','Planned (on first when a court frees)','予定済み（空き次第優先）'],
+planHint:['แตะเลือก {need} คน ครึ่งแรกอยู่ฝั่งซ้าย ครึ่งหลังฝั่งขวา ({n}/{need})','Tap {need} players: first half left, second half right ({n}/{need})','{need}人選択：前半が左、後半が右（{n}/{need}）'],
+planPick:['เลือก','Pick','選択'],planAdded:['วางคู่แล้ว','Match planned','予定に追加しました'],inPlan:['วางคู่แล้ว','Planned','予定済み'],
+bond:['คู่ขา','Fixed partner','固定ペア'],bondNone:['ไม่มี','None','なし'],
+stats:['สถิติ','Stats','成績'],back:['กลับ','Back','戻る'],k_play:['เวลาเล่นรวม','Time on court','プレー時間'],hm:['{h} ชม. {m} นาที','{h}h {m}m','{h}時間{m}分'],
+k_winrate:['% ชนะ','Win rate','勝率'],k_wl:['ชนะ–แพ้','W–L','勝–敗'],k_sessN:['มาเล่น (ครั้ง)','Sessions','参加回数'],k_pd:['แต้มได้–เสีย','Points ±','得失点'],
+partnersT:['คู่หูที่เล่นด้วยบ่อย','Frequent partners','よく組む相手'],h_together:['เล่นด้วยกัน','Together','一緒'],noPartners:['ยังไม่มีข้อมูลคู่หู','No partner data yet','まだデータがありません'],
+allRankPos:['อันดับสะสม #{r} จาก {n} คน','All-time rank #{r} of {n}','通算 {n}人中 {r}位'],
+join:['หน้าลงชื่อ','Check-in page','受付ページ'],joinTitle:['ลงชื่อเข้าก๊วน','Check in','受付'],
+joinHint:['แตะชื่อตัวเองเพื่อเช็คอิน มาครั้งแรกกดปุ่มด้านล่าง','Tap your name to check in. First time? Use the button below.','自分の名前をタップして受付。初めての方は下のボタンへ。'],
+firstTime:['มาครั้งแรก · ลงทะเบียนและประเมินฝีมือ','First time · register and rate your skill','初めて・登録とレベル自己評価'],welcome:['ยินดีต้อนรับ {n}','Welcome, {n}','ようこそ、{n}さん'],
+joinNoSession:['ยังไม่เริ่มก๊วน ตอบนัดครั้งถัดไปได้ด้านล่าง','The session hasn\'t started yet. RSVP to the next one below.','まだ始まっていません。次回の出欠は下から。'],
+exitJoin:['กลับหน้าผู้จัด','Back to organizer view','主催者画面へ'],openJoin:['เปิดหน้าลงชื่อบนเครื่องนี้','Open check-in on this device','この端末で受付を開く'],
+qrTitle:['QR ให้เพื่อนสแกน','QR for friends','友達用QR'],
+qrNote:['ใครสแกนก็เข้าได้ทันที ไม่ต้องสมัครหรือล็อกอิน ลงชื่อ ประเมินฝีมือ ตอบนัด และแจ้งโอนเองได้ ส่วนการจัดคู่ บันทึกผล และบัญชี ทำได้เฉพาะเครื่องที่ใส่ PIN ผู้จัด','Anyone who scans can join right away, no sign-up. They can check in, rate themselves, RSVP and report payments. Matching, results and accounts need the organizer PIN.','スキャンすれば誰でもすぐ参加できます（登録不要）。受付・自己評価・出欠・支払い報告が可能。組み合わせ・結果・会計は主催者PINが必要です。'],
+payTitle:['จ่ายค่าก๊วน','Pay for today','今日の支払い'],payPick:['แตะชื่อตัวเองเพื่อดูยอดและ QR','Tap your name to see your amount and QR','名前をタップして金額とQRを表示'],
+iPaid:['ฉันโอนแล้ว','I\'ve paid','支払いました'],claimSent:['แจ้งแล้ว รอผู้จัดยืนยัน','Sent. Waiting for the organizer to confirm.','送信しました。主催者の確認待ちです。'],
+pending:['ยืนยันการโอน','Confirm payment','入金確認'],payAmount:['ยอดของ {n}: {v}','{n} pays {v}','{n}さん: {v}'],
+recvTitle:['ช่องทางรับเงิน','Receiving payments','受取方法'],ppId:['พร้อมเพย์ (เบอร์โทร/เลขบัตร/e-Wallet)','PromptPay (phone, ID or e-Wallet)','PromptPay（電話番号・ID）'],
+ppNote:['ใส่แล้วแอพจะสร้าง QR พร้อมยอดเงินของแต่ละคนให้อัตโนมัติ (ใช้เมื่อสกุลเงินเป็นบาท)','The app makes a QR with each person\'s exact amount (when currency is baht).','各自の金額入りQRを自動で作ります（通貨がバーツの時）。'],
+payInfo:['ข้อมูลโอนอื่น ๆ (ธนาคาร, PayPay ID ฯลฯ)','Other payment details (bank, PayPay ID…)','その他の振込情報（銀行、PayPay IDなど）'],
+offline:['ออฟไลน์อยู่ ข้อมูลเก็บไว้ในเครื่องก่อน จะซิงก์เองเมื่อเน็ตกลับมา','Offline. Changes are kept and will sync when you\'re back online.','オフライン。変更は保持され、再接続時に同期します。'],
+events:['นัดก๊วน','Upcoming sessions','練習の予定'],newEvent:['สร้างนัด','New','新規'],evDate:['วันที่','Date','日付'],evTime:['เวลา','Time','時間'],evPlace:['สถานที่','Place','場所'],evNote:['หมายเหตุ','Note','メモ'],
+evSave:['บันทึกนัด','Save','保存'],rsvpHint:['แตะชื่อ: มา → ไม่มา → ยังไม่ตอบ','Tap a name: going → not going → no reply','名前をタップ: 参加→不参加→未回答'],
+going:['มา {n}','Going {n}','参加 {n}'],notGoing:['ไม่มา {n}','Not going {n}','不参加 {n}'],invite:['คัดลอกคำเชิญ','Copy invite','招待文をコピー'],
+useEvent:['ใช้รายชื่อนี้เริ่มก๊วน','Use this list to start','この名簿で開始'],noEvents:['ยังไม่มีนัด','Nothing scheduled','予定はありません'],
+inviteT:['นัดตีแบด','Badminton','バドミントン練習'],answerIn:['ตอบรับในแอพ','RSVP in the app','アプリで出欠'],comeList:['มาแล้ว','Going','参加'],evUsed:['เลือกคนที่ตอบว่ามาแล้ว','Selected everyone who\'s going','参加者を選択しました'],
+recap:['สร้างการ์ดสรุป','Make recap card','まとめカードを作成'],recapSave:['บันทึกรูป','Save image','画像を保存'],recapTitle:['สรุปก๊วน','Session recap','練習まとめ'],
+c_players:['ผู้เล่น','Players','人数'],c_games:['เกม','Games','試合'],c_sh:['ลูก','Shuttles','シャトル'],c_spg:['ลูก/เกม','Per game','1試合'],
+payMethod:['รับเงินผ่าน','Receive via','受取方法'],pm_paypay:['PayPay','PayPay','PayPay'],pm_promptpay:['พร้อมเพย์','PromptPay','PromptPay'],pm_other:['อื่น ๆ','Other','その他'],
+ppUpload:['อัปโหลดรูป QR รับเงินจาก PayPay','Upload your PayPay receive QR','PayPayの受け取りQR画像をアップロード'],
+ppUploadHint:['ในแอพ PayPay เปิดหน้า QR รับเงินของคุณ แคปหน้าจอ แล้วอัปโหลดรูปที่นี่ แอพจะอ่านโค้ดแล้วแสดง QR ให้ผู้เล่นสแกนจ่ายพร้อมบอกยอดของแต่ละคน','In PayPay, open your receive QR, take a screenshot and upload it here. The app reads the code and shows it to players with each person\'s amount.','PayPayで受け取り用QRを表示してスクショし、ここにアップロード。コードを読み取り、各自の金額と一緒に表示します。'],
+ppCode:['โค้ด/ลิงก์ PayPay (อ่านจากรูปให้อัตโนมัติ)','PayPay code or link (filled in from the image)','PayPayコード・リンク（画像から自動入力）'],ppIdLbl:['PayPay ID (ไม่บังคับ)','PayPay ID (optional)','PayPay ID（任意）'],
+ppRead:['อ่าน QR PayPay สำเร็จ','PayPay QR saved','PayPayのQRを保存しました'],ppFail:['อ่าน QR ไม่ได้ ลองครอปรูปให้เห็น QR ชัด ๆ','Couldn\'t read a QR. Crop closer to the code and try again.','QRを読み取れません。QR部分を大きく切り抜いて再度お試しください。'],
+ppScan:['เปิด PayPay สแกน QR นี้ แล้วใส่ยอด {v}','Scan with PayPay and enter {v}','PayPayでスキャンして {v} を入力'],openPP:['เปิดในแอพ PayPay','Open in PayPay','PayPayで開く'],copyId:['คัดลอก ID','Copy ID','IDをコピー'],
+fbTitle:['เชื่อมฐานข้อมูล Firebase','Connect Firebase','Firebaseに接続'],
+fbIntro:['วางโค้ด firebaseConfig ที่คัดลอกจาก Firebase (ขั้นตอนอยู่ในคู่มือ) ทำครั้งเดียวบนเครื่องผู้จัด เพื่อนที่สแกน QR จะเชื่อมให้อัตโนมัติ','Paste the firebaseConfig you copied from Firebase (see the guide). Do this once on the organizer\'s phone; friends who scan the QR connect automatically.','Firebaseからコピーした firebaseConfig を貼り付けてください（手順はガイド参照）。主催者の端末で一度だけ。QRをスキャンした人は自動で接続されます。'],
+fbConnect:['เชื่อมต่อ','Connect','接続'],fbBad:['ไม่พบ apiKey หรือ projectId ในข้อความที่วาง','Couldn\'t find apiKey and projectId in what you pasted','apiKey と projectId が見つかりません'],
+tryLocal:['ลองใช้แบบเครื่องเดียวก่อน','Try on this device only','この端末だけで試す'],
+fbErr:['เชื่อม Firebase ไม่สำเร็จ: {m}','Couldn\'t connect to Firebase: {m}','Firebaseに接続できません: {m}'],resetCfg:['ตั้งค่าการเชื่อมต่อใหม่','Reset connection','接続をやり直す'],
+fbErrHint:['เช็คว่าเปิด Anonymous ใน Authentication และสร้าง Firestore แล้ว','Check that Anonymous sign-in is enabled and Firestore is created','匿名ログインが有効で、Firestoreが作成済みか確認してください'],
+adminTitle:['สิทธิ์ผู้จัด','Organizer access','主催者権限'],adminYes:['เครื่องนี้เป็นผู้จัดแล้ว จัดคู่ บันทึกผล และจัดการบัญชีได้','This device is an organizer: matching, results and accounts are unlocked.','この端末は主催者です。組み合わせ・結果・会計を操作できます。'],
+adminNo:['ใส่ PIN ผู้จัดเพื่อปลดล็อกการจัดก๊วนบนเครื่องนี้','Enter the organizer PIN to unlock organizing on this device','主催者PINを入力すると、この端末で運営操作ができます'],
+pinFirst:['ครั้งแรกสุดที่ใส่ PIN จะเป็นการตั้ง PIN ของก๊วน (ตัวเลข 4–8 หลัก) จดไว้ให้ดี','The very first PIN entered becomes the club PIN (4–8 digits). Keep it safe.','最初に入力したPINがクラブのPINになります（4〜8桁）。控えておいてください。'],
+pinPh:['PIN 4–8 หลัก','4–8 digit PIN','4〜8桁のPIN'],pinBtn:['เข้าโหมดผู้จัด','Unlock organizer mode','主催者モードにする'],
+pinFmt:['PIN ต้องเป็นตัวเลข 4–8 หลัก','PIN must be 4–8 digits','PINは4〜8桁の数字です'],pinWrong:['PIN ไม่ถูกต้อง','Wrong PIN','PINが違います'],
+adminOk:['เข้าโหมดผู้จัดแล้ว','Organizer mode on','主催者モードになりました'],adminOffBtn:['ออกจากโหมดผู้จัดบนเครื่องนี้','Leave organizer mode on this device','この端末の主催者モードを解除'],adminOff:['ออกจากโหมดผู้จัดแล้ว','Organizer mode off','主催者モードを解除しました'],
+roleAdmin:['ผู้จัด','Organizer','主催者'],roleViewer:['ผู้เล่น','Player','プレーヤー'],
+linkTitle:['ลิงก์ก๊วน','Club link','クラブのリンク'],copyLink:['คัดลอกลิงก์','Copy link','リンクをコピー'],
+notAdmin:['ต้องใส่ PIN ผู้จัดก่อน','Organizer PIN needed','主催者PINが必要です'],checkinSent:['ส่งเช็คอินแล้ว รอเครื่องผู้จัดรับ','Check-in sent to the organizer','受付を送信しました'],
+q1:['เล่นแบดมานานแค่ไหน','How long have you played?','バドミントン歴は？'],
+q1o:[['ไม่ถึง 6 เดือน','6 เดือน – 2 ปี','2 – 5 ปี','มากกว่า 5 ปี'],['Under 6 months','6 months – 2 years','2 – 5 years','Over 5 years'],['半年未満','半年〜2年','2〜5年','5年以上']],
+q2:['ตีเคลียร์จากท้ายคอร์ทไปถึงท้ายอีกฝั่งได้ไหม','Can you clear from your back line to theirs?','後ろから相手コート奥までクリアが届く？'],
+q2o:[['ยังไม่ได้','ได้บางครั้ง','ได้สม่ำเสมอ','ได้ทั้งโฟร์แฮนด์และแบ็คแฮนด์'],['Not yet','Sometimes','Consistently','Forehand and backhand'],['まだ届かない','時々届く','安定して届く','フォア・バック両方で届く']],
+q3:['การตบ (smash)','Your smash','スマッシュは？'],
+q3o:[['ยังตบไม่ได้','ตบได้แต่ไม่แรง','แรงและลงในเส้น','ตบต่อเนื่องและเลือกมุมได้'],['Can\'t smash yet','Can, but not hard','Hard and in','Repeated, with placement'],['まだ打てない','打てるが弱い','強く、コートに入る','連続で打ち、コースも狙える']],
+q4:['การยืนตำแหน่งและฟุตเวิร์คในเกมคู่','Positioning and footwork in doubles','ダブルスのポジションとフットワーク'],
+q4o:[['ยังไม่รู้ตำแหน่ง','รู้หน้า-หลังพื้นฐาน','หมุนตำแหน่งกับคู่ได้','อ่านเกมและคุมจังหวะได้'],['Not sure where to stand','Know basic front/back','Rotate smoothly with partner','Read the game and control pace'],['位置がわからない','前後の基本はわかる','ペアとローテーションできる','試合を読んで展開を作れる']],
+q5:['ประสบการณ์แข่งขัน','Competition experience','試合経験'],
+q5o:[['ไม่เคยแข่ง','เล่นก๊วนอย่างเดียว','แข่งระดับสโมสร/มหาลัย','แข่งรายการเปิด/เคยเป็นนักกีฬา'],['Never','Social play only','Club or university events','Open tournaments / ex-team player'],['なし','サークル・練習会のみ','クラブ・大学の大会','オープン大会・元選手']],
+};
+const LANGS=['th','en','ja'];const LOC={th:'th-TH',en:'en-GB',ja:'ja-JP'};
+let lang=(()=>{try{const l=localStorage.getItem('kuanbad.lang');if(LANGS.includes(l))return l}catch(e){}const n=(navigator.language||'th').slice(0,2);return LANGS.includes(n)?n:'th'})();
+const li=()=>LANGS.indexOf(lang);
+function t(k,v){let s=T[k]?T[k][li()]:k;if(v)for(const x in v)s=s.split('{'+x+'}').join(v[x]);return s}
+const LVS=['',null,'BG','N','S','P-','P','P+'];const LV1=['มือใหม่','Newbie','初心者'];
+const lvLabel=r=>{const i=Math.max(1,Math.min(7,Math.round(r)));return i===1?LV1[li()]:LVS[i]};
+
+/* =================== state =================== */
+const MODES={balanced:{w:{f:1.2,d:3,s:.3,p:2,o:.6}},level:{w:{f:1,d:2,s:3,p:1.5,o:.5},win:6},mixed:{w:{f:1.2,d:2.5,s:.3,p:2,o:.6,mix:6}},random:{w:{f:1.2,d:0,s:0,p:1,o:.3,r:8}},winner:{w:{f:1.2,d:3,s:.3,p:2,o:.6}}};
+const DEF_PREFS={courts:2,format:'doubles',mode:'balanced',auto:true,courtFee:0,shuttle:0,cur:'฿',feeMode:'total',courtRate:0,hours:2,payMode:'usage',flat:0,courtNames:'',scoring:'quick',ppId:'',payInfo:'',payMethod:'paypay',paypayCode:'',paypayId:''};
+let S={players:{},live:null,ledger:{},stock:{},events:{},rsvp:{},inbox:{},prefs:{...DEF_PREFS}};
+let DB=null,DL=true,isAdmin=false,UID=null,mode='loading',ro=false,undoStack=[],armT,toastT,pendingRender=false;
+const ui={sc:{},plan:null,stat:null,payFor:null,qrFor:null,showQr:false,ev:null,recap:null,rv:'today',tab:'play',sel:null,arm:null,copy:null,form:null,bulk:false,q:'',pick:null,open:{}};
+const uid=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,6);
+const now=()=>Date.now();
+const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const clampLv=v=>Math.max(.6,Math.min(7.9,v));
+const PL=id=>S.players[id];
+const nm=id=>{const p=PL(id);return p?p.name:t('removed')};
+const mins=x=>Math.max(0,Math.floor((now()-x)/60000));
+const money=v=>(S.live?S.live.cur:S.prefs.cur)+Math.round(v).toLocaleString(LOC[lang]);
+const moneyC=(v,c)=>c+Math.round(v).toLocaleString(LOC[lang]);
+const clone=o=>JSON.parse(JSON.stringify(o));
+const fmt1=v=>(Math.round(v*10)/10).toLocaleString(LOC[lang]);
+
+/* =================== storage layer (Firebase) =================== */
+const LKEY='kuanbad.local';
+const W={};
+function saveLocal(){if(mode!=='local')return;try{localStorage.setItem(LKEY,JSON.stringify(S))}catch(e){}}
+function put(path,data){
+  if(mode==='local'){applyLocal(path,data);saveLocal();return}
+  if(mode!=='db')return;
+  const w=W[path]||(W[path]={busy:false,next:null});w.next={d:data===null?null:clone(data)};if(!w.busy)flush(path);
+}
+function applyLocal(path,data){const [c,id]=path.split('/');if(c==='rsvp'||c==='inbox'){if(data===null)delete S[c][id];else S[c][id]=clone(data)}}
+async function flush(path){const w=W[path];w.busy=true;
+  while(w.next){const n=w.next;w.next=null;
+    try{if(n.d===null)await DB.doc(path).delete();else await DB.doc(path).set(n.d)}catch(e){dbErr(e)}}
+  w.busy=false;}
+function syncBar(){const el=document.getElementById('sync');if(!el)return;const off=typeof navigator!=='undefined'&&navigator.onLine===false;el.hidden=!off;el.textContent=off?t('offline'):''}
+window.addEventListener('online',syncBar);window.addEventListener('offline',syncBar);
+function busy(path){const w=W[path];return !!(w&&(w.busy||w.next))}
+function dbErr(e){const c=e&&e.code;
+  if(c==='permission-denied'){toast(isAdmin?t('saveFail'):t('notAdmin'))}
+  else if(c==='resource-exhausted')toast(t('quota'));
+  else toast(t('saveFail'));}
+const commitLive=()=>{if(S.live){S.live.rev=now();put('club/live',S.live)}else put('club/live',null)};
+const commitPlayer=id=>{const p=PL(id);if(p){p.upd=now();put('players/'+id,p)}};
+const commitPrefs=()=>put('club/prefs',S.prefs);
+function colSub(name,after){DB.collection(name).onSnapshot(snap=>{for(const ch of snap.docChanges()){const id=ch.doc.id;if(busy(name+'/'+id))continue;
+    if(ch.type==='removed')delete S[name][id];else S[name][id]=clone(ch.doc.data())}if(after)after();rr()},e=>{})}
+function subscribeAll(){
+  colSub('players',()=>{ready.players=true;if(isAdmin)processInbox()});
+  DB.doc('club/live').onSnapshot(d=>{if(!busy('club/live')){
+      if(!d.exists)S.live=null;else{const r=d.data();if(!S.live||(r.rev||0)>=(S.live.rev||0))S.live=clone(r)}}
+    ready.live=true;if(isAdmin)processInbox();rr()},e=>{ready.live=true;rr()});
+  DB.doc('club/prefs').onSnapshot(d=>{if(!busy('club/prefs')&&d.exists)S.prefs={...DEF_PREFS,...clone(d.data())};rr()},e=>{});
+  colSub('ledger');colSub('stock');colSub('events');colSub('rsvp');colSub('inbox',()=>{if(isAdmin)processInbox()});
+}
+function processInbox(){const L=S.live;if(!ready.live||!ready.players)return;let ch=false;const done=[];
+  for(const [id,m] of Object.entries(S.inbox)){
+    if(L&&m.type==='checkin'){if(!PL(m.pid))continue;setStatus(m.pid,'in',true);ch=true}
+    else if(L&&m.type==='claim'){if(!(L.paid&&L.paid[m.pid])){L.claims=L.claims||{};L.claims[m.pid]=m.at||now();ch=true}}
+    done.push(id)}
+  if(ch)commitLive();done.forEach(id=>{delete S.inbox[id];put('inbox/'+id,null)})}
+function inboxAdd(type,pid){const id=uid(),m={type,pid,at:now()};S.inbox[id]=m;put('inbox/'+id,m);if(mode==='local'||isAdmin)processInbox()}
+const ready={players:false,live:false};
+function rr(){if(mode==='loading'&&ready.players&&ready.live)mode='db';if(mode!=='loading')requestRender()}
+function requestRender(){const a=document.activeElement;if(a&&a.matches('#view input,#view textarea,#view select')){pendingRender=true;return}render()}
+document.addEventListener('focusout',()=>{if(pendingRender)setTimeout(()=>{const a=document.activeElement;if(!(a&&a.matches('#view input,#view textarea,#view select'))){pendingRender=false;render()}},50)});
+
+const DEFAULT_CFG={apiKey:'AIzaSyAPnFDK8avUlHpM9bjF8mOpbiELc7jC-z0',authDomain:'kuanbad-1e053.firebaseapp.com',projectId:'kuanbad-1e053'};
+function readCfg(){try{const c=JSON.parse(localStorage.getItem('kb.fb')||'null');if(c)return c}catch(e){}return DEFAULT_CFG}
+function parseCfg(txt){const g=k=>{const m=txt.match(new RegExp(k+'["\']?\\s*:\\s*["\']([^"\']+)'));return m?m[1]:''};
+  const apiKey=g('apiKey'),projectId=g('projectId');if(!apiKey||!projectId)return null;return {apiKey,projectId,authDomain:g('authDomain')||projectId+'.firebaseapp.com'}}
+function joinUrl(){const c=readCfg(),base=location.origin+location.pathname;return c&&c.projectId!==DEFAULT_CFG.projectId?base+'?k='+encodeURIComponent(c.apiKey)+'&p='+encodeURIComponent(c.projectId)+'#join':base+'#join'}
+async function boot(){
+  if(location.hash==='#join')ui.tab='join';
+  const qp=new URLSearchParams(location.search),k=qp.get('k'),p=qp.get('p');
+  if(k&&p){try{localStorage.setItem('kb.fb',JSON.stringify({apiKey:k,projectId:p,authDomain:p+'.firebaseapp.com'}));localStorage.removeItem('kb.localOnly')}catch(e){}}
+  const cfg=readCfg();
+  if(!cfg){let lo=false;try{lo=localStorage.getItem('kb.localOnly')==='1'}catch(e){}if(lo){startLocal();return}mode='nocfg';render();return}
+  if(!window.firebase){mode='fberr';ui.fberr='Firebase SDK did not load';render();return}
+  render();
+  try{
+    firebase.initializeApp(cfg);DB=firebase.firestore();
+    try{await DB.enablePersistence({synchronizeTabs:true})}catch(e){}
+    const cred=await firebase.auth().signInAnonymously();UID=cred.user.uid;
+    try{const a=await DB.doc('admins/'+UID).get();isAdmin=a.exists}catch(e){try{isAdmin=localStorage.getItem('kb.admin')==='1'}catch(_){}}
+    ro=!isAdmin;subscribeAll();syncBar();
+    setTimeout(()=>{if(mode==='loading'){mode='db';render()}},8000);
+  }catch(e){mode='fberr';ui.fberr=String((e&&(e.code||e.message))||e);render()}
+}
+function startLocal(){mode='local';isAdmin=true;ro=false;
+  try{const x=JSON.parse(localStorage.getItem(LKEY)||'null');if(x)S={...S,...x,rsvp:x.rsvp||{},inbox:{},events:x.events||{},prefs:{...DEF_PREFS,...(x.prefs||{})}}}catch(e){}
+  render()}
+async function becomeAdmin(pin){
+  if(!/^\d{4,8}$/.test(pin)){toast(t('pinFmt'));return}
+  try{await DB.doc('secret/pin').set({value:pin})}catch(e){}
+  try{await DB.doc('admins/'+UID).set({pin,at:now()});isAdmin=true;ro=false;try{localStorage.setItem('kb.admin','1')}catch(e){}toast(t('adminOk'));processInbox();render()}
+  catch(e){toast(t('pinWrong'))}}
+async function leaveAdmin(){try{await DB.doc('admins/'+UID).delete()}catch(e){}isAdmin=false;ro=true;try{localStorage.removeItem('kb.admin')}catch(e){}toast(t('adminOff'));render()}
+
+/* =================== matching engine =================== */
+function busyIds(){const s=new Set();if(S.live)S.live.courts.forEach(c=>{if(c.match){c.match.a.forEach(i=>s.add(i));c.match.b.forEach(i=>s.add(i))}});return s}
+function queue(ex){if(!S.live)return [];const b=busyIds();(ex||[]).forEach(i=>b.add(i));const sp=S.live.sp;
+  return Object.keys(sp).filter(id=>PL(id)&&sp[id].status==='in'&&!b.has(id)).sort((x,y)=>sp[x].lastEnd-sp[y].lastEnd||sp[x].games-sp[y].games)}
+const pk=(a,b)=>a<b?a+'|'+b:b+'|'+a;
+function repeats(){const Pm={},Om={};const inc=(m,k)=>m[k]=(m[k]||0)+1;
+  for(const h of S.live.history){if(h.a.length===2)inc(Pm,pk(h.a[0],h.a[1]));if(h.b.length===2)inc(Pm,pk(h.b[0],h.b[1]));for(const x of h.a)for(const y of h.b)inc(Om,pk(x,y))}
+  return {Pm,Om}}
+function combos(arr,r){if(r===0)return [[]];const out=[];for(let i=0;i<=arr.length-r;i++)for(const c of combos(arr.slice(i+1),r-1))out.push([arr[i],...c]);return out}
+function splits(ids){if(ids.length===2)return [[[ids[0]],[ids[1]]]];const [a,b,c,d]=ids;return [[[a,b],[c,d]],[[a,c],[b,d]],[[a,d],[b,c]]]}
+function plannedIds(){const s=new Set();((S.live&&S.live.planned)||[]).forEach(p=>[...p.a,...p.b].forEach(i=>s.add(i)));return s}
+function pick(fixed,opt){
+  fixed=fixed||[];opt=opt||{};const L=S.live;
+  const need=L.format==='singles'?2:4,k=need-fixed.length;const q=queue([...fixed,...plannedIds()]);if(q.length<k)return null;
+  const M=MODES[L.mode]||MODES.balanced,Wt=Object.assign({},M.w);if(opt.preview)Wt.r=0;if(opt.noise)Wt.r=(Wt.r||0)+opt.noise;
+  const win=q.slice(0,Math.min(q.length,k+(M.win||4)));
+  const bonds=L.format==='singles'||fixed.length?{}:(L.bonds||{}),qs=new Set(q);
+  for(const id of [...win]){const b=bonds[id];if(b&&qs.has(b)&&!win.includes(b))win.push(b)}
+  const rank=new Map(win.map((p,i)=>[p,i]));const {Pm,Om}=repeats();
+  let best=null,bs=Infinity;
+  for(const c of combos(win.slice(1),k-1)){const ids=[win[0],...c];const opts=fixed.length?[[fixed,ids]]:splits(ids);
+    for(const [A,B] of opts){const s=score(A,B,ids,rank,Pm,Om,Wt,bonds,qs);if(s<bs){bs=s;best=[A,B]}}}
+  return best;
+}
+function score(A,B,ids,rank,Pm,Om,Wt,bonds,qs){
+  const r=i=>PL(i).lv;let fair=0;for(const i of ids)fair+=rank.get(i);
+  const sA=A.reduce((s,i)=>s+r(i),0),sB=B.reduce((s,i)=>s+r(i),0);const lv=[...A,...B].map(r);
+  let rep=0;if(A.length===2)rep+=Pm[pk(A[0],A[1])]||0;if(B.length===2)rep+=Pm[pk(B[0],B[1])]||0;
+  let opp=0;for(const a of A)for(const b of B)opp+=Om[pk(a,b)]||0;
+  let mix=0;if(Wt.mix)for(const Tm of [A,B])if(Tm.length===2){const g1=PL(Tm[0]).g,g2=PL(Tm[1]).g;if(g1&&g2&&g1===g2)mix++}
+  let bp=0;if(bonds){const ch=new Set(ids);for(const i of ids){const b=bonds[i];if(!b)continue;if(qs.has(b)&&!ch.has(b))bp++;else if(ch.has(b)&&A.includes(i)!==A.includes(b))bp++}}
+  return Wt.f*fair+Wt.d*Math.abs(sA-sB)+Wt.s*(Math.max(...lv)-Math.min(...lv))+Wt.p*rep+Wt.o*opp+(Wt.mix||0)*mix+40*bp+(Wt.r?Math.random()*Wt.r:0);
+}
+
+/* =================== session actions =================== */
+function startCourt(ci,quiet,noise){
+  const L=S.live;
+  if(!noise&&L.planned&&L.planned.length){const b=busyIds();const ix=L.planned.findIndex(p=>[...p.a,...p.b].every(i=>PL(i)&&L.sp[i]&&L.sp[i].status==='in'&&!b.has(i)));
+    if(ix>=0){const p=L.planned.splice(ix,1)[0];L.courts[ci].match={a:p.a,b:p.b,start:now(),sh:1};return true}}
+  const res=pick([],{noise});
+  if(!res){if(!quiet)toast(t('notEnough',{n:S.live.format==='singles'?2:4}));return false}
+  S.live.courts[ci].match={a:res[0],b:res[1],start:now(),sh:1};return true;
+}
+function mkCourt(n){return {id:uid(),name:String(n),match:null}}
+const cnames=()=>(S.prefs.courtNames||'').split(/[,\s、，]+/).filter(Boolean);
+function courtCost(L){const f=L.fee;return f.mode==='hourly'?(f.rate||0)*L.courts.length*(f.hours||0):(f.court||0)}
+function startSession(){
+  const P=S.prefs,ids=ui.pick?[...ui.pick]:[];const need=P.format==='singles'?2:4;
+  if(ids.length<need){toast(t('needMore',{n:need}));return}
+  const t0=now(),sp={};ids.forEach((id,i)=>sp[id]={status:'in',games:0,wins:0,losses:0,lastEnd:t0-(ids.length-i)*1000+Math.floor(Math.random()*500),shu:0,att:true,lv0:PL(id).lv});
+  S.live={rev:t0,startedAt:t0,courts:Array.from({length:P.courts},(_,i)=>mkCourt(cnames()[i]||i+1)),mode:P.mode,format:P.format,auto:P.auto,scoring:P.scoring||'quick',bonds:{},planned:[],claims:{},fee:{mode:P.feeMode,court:P.courtFee,rate:P.courtRate,hours:P.hours,shuttle:P.shuttle,pay:P.payMode,flat:P.flat},paid:{},cur:P.cur,sp,history:[],streak:{}};
+  S.live.courts.forEach((c,i)=>startCourt(i,true));
+  ui.pick=null;undoStack=[];commitLive();commitPrefs();toast(t('started'));
+}
+function finish(ci,winner,sc){
+  const L=S.live,c=L.courts[ci],m=c.match,tm=now(),all=[...m.a,...m.b];
+  const pts=sc?sc.reduce((a,g)=>[a[0]+g[0],a[1]+g[1]],[0,0]):null,dur=Math.min(90*60000,Math.max(0,tm-m.start));
+  undoStack.push({live:JSON.stringify(L),pl:all.filter(PL).map(i=>[i,JSON.stringify(PL(i))])});if(undoStack.length>15)undoStack.shift();
+  L.history.unshift(Object.assign({a:m.a,b:m.b,w:winner,end:tm,start:m.start,court:c.name,sh:m.sh},sc?{sc}:{}));if(L.history.length>500)L.history.length=500;
+  if(winner&&L.auto&&all.every(PL)){
+    const avg=ids=>ids.reduce((s,i)=>s+PL(i).lv,0)/ids.length;const ea=1/(1+Math.pow(10,(avg(m.b)-avg(m.a))/2)),sa=winner==='a'?1:0,K=.2;
+    m.a.forEach(i=>PL(i).lv=clampLv(PL(i).lv+K*(sa-ea)));m.b.forEach(i=>PL(i).lv=clampLv(PL(i).lv+K*(ea-sa)));
+  }
+  all.forEach(i=>{const s=L.sp[i],p=PL(i);const won=winner&&m[winner].includes(i),inA=m.a.includes(i);
+    const mates=(inA?m.a:m.b).filter(x=>x!==i),pf=pts?(inA?pts[0]:pts[1]):0,pa=pts?(inA?pts[1]:pts[0]):0;
+    if(s){s.games++;if(winner){won?s.wins++:s.losses++}s.lastEnd=tm;s.shu+=m.sh/all.length;s.pf=(s.pf||0)+pf;s.pa=(s.pa||0)+pa;s.ms=(s.ms||0)+dur}
+    if(p){p.games=(p.games||0)+1;if(winner){won?p.wins=(p.wins||0)+1:p.losses=(p.losses||0)+1}
+      p.playMs=(p.playMs||0)+dur;p.pf=(p.pf||0)+pf;p.pa=(p.pa||0)+pa;p.partners=p.partners||{};p.pw=p.pw||{};
+      mates.forEach(x=>{p.partners[x]=(p.partners[x]||0)+1;if(won)p.pw[x]=(p.pw[x]||0)+1})}});
+  c.match=null;let stayed=false;
+  if(L.mode==='winner'&&winner){
+    const Wn=m[winner],key=[...Wn].sort().join('|'),st=L.streak[c.id];const n=st&&st.k===key?st.n+1:1;L.streak[c.id]={k:key,n};
+    if(n<2&&Wn.every(i=>L.sp[i]&&L.sp[i].status==='in')){const res=pick(Wn);if(res){c.match={a:Wn,b:res[1],start:tm,sh:1,stay:n};stayed=true}}
+    if(!stayed)delete L.streak[c.id];
+  }
+  if(!stayed)startCourt(ci,true);
+  commitLive();all.forEach(i=>{if(PL(i))commitPlayer(i)});
+}
+function doSwap(ci,id){
+  const s=ui.sel;if(!s)return;const L=S.live,c1=L.courts[s.ci].match;
+  const loc=(m,x)=>{for(const k of ['a','b']){const j=m[k].indexOf(x);if(j>=0)return [k,j]}};
+  if(ci===undefined){const [k,j]=loc(c1,s.id);c1[k][j]=id}
+  else{const c2=L.courts[ci].match;const [k1,j1]=loc(c1,s.id),[k2,j2]=loc(c2,id);c1[k1][j1]=id;c2[k2][j2]=s.id}
+  ui.sel=null;commitLive();
+}
+function billRows(L){
+  const ids=Object.keys(L.sp).filter(id=>L.sp[id].att);const n=ids.length||1;
+  const cc=courtCost(L),price=L.fee.shuttle||0,shT=L.history.reduce((s,h)=>s+(h.sh||0),0)*price;
+  const totG=ids.reduce((s,id)=>s+L.sp[id].games,0),pay=L.fee.pay||'usage';
+  return ids.map(id=>{const s=L.sp[id];let court=cc/n,sh=s.shu*price,total;
+    if(pay==='equal'){sh=shT/n;total=court+sh}
+    else if(pay==='games'){const f=totG?s.games/totG:1/n;court=cc*f;sh=shT*f;total=court+sh}
+    else if(pay==='flat'){total=L.fee.flat||0}
+    else total=court+sh;
+    return {id,name:nm(id),games:s.games,wins:s.wins,losses:s.losses,court,sh,total:Math.ceil(total),paid:!!(L.paid&&L.paid[id])}});
+}
+function sessionStats(L){
+  const games=L.history.length,sh=L.history.reduce((s,h)=>s+(h.sh||0),0);
+  const cost=courtCost(L)+sh*(L.fee.shuttle||0);
+  return {games,sh,spg:games?sh/games:0,cost,players:Object.values(L.sp).filter(s=>s.att).length};
+}
+function rankList(es){return es.filter(e=>e.games>0).sort((a,b)=>b.wins-a.wins||(b.wins/b.games)-(a.wins/a.games)||(b.pd||0)-(a.pd||0)||(b.dlv||0)-(a.dlv||0)||a.name.localeCompare(b.name))}
+function liveRank(L){return rankList(Object.keys(L.sp).map(id=>{const s=L.sp[id],p=PL(id);return {id,name:nm(id),games:s.games,wins:s.wins,losses:s.losses,pd:(s.pf||0)-(s.pa||0),dlv:p&&s.lv0!=null?Math.round((p.lv-s.lv0)*100)/100:0}}))}
+function allTimeRank(){const m={};
+  Object.values(S.ledger).forEach(l=>(l.rank||[]).forEach((r,i)=>{const k=r.id||r.name;const o=m[k]||(m[k]={id:r.id,name:r.name,g:0,s:0,b:0,games:0,wins:0,losses:0,sess:0});
+    if(i===0)o.g++;else if(i===1)o.s++;else if(i===2)o.b++;o.games+=r.games;o.wins+=r.wins;o.losses+=r.losses;o.sess++;if(PL(r.id))o.name=PL(r.id).name}));
+  return Object.values(m).sort((a,b)=>b.g-a.g||b.s-a.s||b.b-a.b||b.wins-a.wins||(b.wins/(b.games||1))-(a.wins/(a.games||1)))}
+function endSession(){
+  const L=S.live,st=sessionStats(L),rows=billRows(L);const id='s'+L.startedAt;
+  S.ledger[id]={date:L.startedAt,end:now(),courts:L.courts.length,players:st.players,games:st.games,shuttles:st.sh,spg:Math.round(st.spg*100)/100,
+    fee:{court:Math.round(courtCost(L)),shuttle:L.fee.shuttle||0,pay:L.fee.pay||'usage',flat:L.fee.flat||0,mode:L.fee.mode||'total',rate:L.fee.rate||0,hours:L.fee.hours||0},cur:L.cur,cost:Math.round(st.cost),collected:rows.reduce((s,r)=>s+r.total,0),
+    per:rows.map(r=>({id:r.id,name:r.name,games:r.games,amt:r.total,paid:r.paid})),rank:liveRank(L)};
+  put('ledger/'+id,S.ledger[id]);S.live=null;undoStack=[];commitLive();toast(t('ended'));ui.tab='rank';ui.rv='today';
+}
+function armed(key){if(ui.arm===key){ui.arm=null;clearTimeout(armT);return true}
+  ui.arm=key;clearTimeout(armT);armT=setTimeout(()=>{ui.arm=null;render()},3500);render();return false}
+function toast(s){const el=document.getElementById('toast');el.textContent=s;el.hidden=false;clearTimeout(toastT);toastT=setTimeout(()=>el.hidden=true,2800)}
+function copy(s){try{navigator.clipboard.writeText(s).then(()=>toast(t('copied')),()=>{ui.copy=s;render()})}catch(e){ui.copy=s;render()}}
+const team=ids=>ids.map(nm).join(' & ');
+function shareText(){const L=S.live;const lines=[t('shareTitle')+' '+new Date().toLocaleTimeString(LOC[lang],{hour:'2-digit',minute:'2-digit'})];
+  L.courts.forEach(c=>lines.push(`${t('court')} ${c.name}: `+(c.match?`${team(c.match.a)}  vs  ${team(c.match.b)}`:t('free'))));
+  const q=queue();if(q.length)lines.push(t('upNext')+': '+q.map(nm).join(', '));return lines.join('\n')}
+function billText(L,rows){const st=sessionStats(L);
+  return [t('billTitle')+' '+new Date(L.startedAt).toLocaleDateString(LOC[lang]),t('billSum',{c:moneyC(courtCost(L),L.cur),s:st.sh,p:moneyC(L.fee.shuttle,L.cur)}),t('payHow')+': '+t('pay_'+(L.fee.pay||'usage')),
+  ...rows.map(r=>`${r.name}: ${moneyC(r.total,L.cur)}${r.paid?' ✓':''}`)].join('\n')}
+
+/* =================== players =================== */
+function assessLevel(ans){if(!ans||ans.some(a=>a<0))return null;const s=ans.reduce((a,b)=>a+b,0);
+  return s<=1?1:s<=4?2:s<=7?3:s<=9?4:s<=11?5:s<=13?6:7}
+function savePlayer(){
+  const f=ui.form,name=(document.getElementById('pname')||{}).value||f.name;
+  if(!name.trim()){toast(t('nameNeeded'));return}
+  const lv=f.lv||assessLevel(f.ans)||3;
+  if(f.id&&PL(f.id)){const p=PL(f.id);const changed=p.selfLv!==lv;p.name=name.trim();p.g=f.g;p.ans=f.ans;if(changed){p.lv=lv;p.selfLv=lv}commitPlayer(f.id)}
+  else{const id=uid();S.players[id]={name:name.trim(),g:f.g,lv,selfLv:lv,ans:f.ans,games:0,wins:0,losses:0,created:now(),upd:now()};commitPlayer(id);if(ui.pick)ui.pick.add(id);
+    if(S.live){if(isAdmin){S.live.sp[id]={status:'in',games:0,wins:0,losses:0,lastEnd:now(),shu:0,att:true,lv0:lv};commitLive()}else inboxAdd('checkin',id)}}
+  toast(t('added',{n:name.trim()}));ui.form=null;if(ui.pick&&!f.id){}
+}
+function parseLine(line){
+  const tk=line.trim().split(/\s+/).filter(Boolean);if(!tk.length)return null;let lv=3,g='';
+  for(let n=0;n<2&&tk.length>1;n++){const x=tk[tk.length-1],up=x.toUpperCase();
+    if(LV1.some(s=>s.toUpperCase()===up)){lv=1;tk.pop();continue}
+    const i=LVS.findIndex((s,j)=>j>1&&s===up);if(i>1){lv=i;tk.pop();continue}
+    if(/^(ช|ชาย|m|男|男性)$/i.test(x)){g='M';tk.pop();continue}
+    if(/^(ญ|หญิง|f|女|女性)$/i.test(x)){g='F';tk.pop();continue}break}
+  return {name:tk.join(' '),lv,g};
+}
+function setStatus(id,st,noCommit){const L=S.live;if(!L)return;
+  if(!L.sp[id])L.sp[id]={status:st,games:0,wins:0,losses:0,lastEnd:now(),shu:0,att:st==='in',lv0:PL(id)?PL(id).lv:null};
+  else{const s=L.sp[id];if(st==='in'&&s.status!=='in'&&s.games===0)s.lastEnd=now();s.status=st;if(st==='in')s.att=true}
+  if(!noCommit)commitLive()}
+
+/* =================== stock & backup =================== */
+function stockInfo(){
+  const buys=Object.values(S.stock);const bought=buys.reduce((s,b)=>s+b.tubes*b.per,0),spent=buys.reduce((s,b)=>s+b.tubes*b.price,0);
+  const used=Object.values(S.ledger).reduce((s,l)=>s+(l.shuttles||0),0)+(S.live?sessionStats(S.live).sh:0);
+  return {bought,used,left:bought-used,avg:bought?spent/bought:0,has:buys.length>0};
+}
+async function saveFile(filename,data){
+  try{const type=filename.endsWith('.png')?'image/png':filename.endsWith('.csv')?'text/csv':'application/json';
+    const b=data instanceof Blob?data:new Blob([data],{type});const u=URL.createObjectURL(b);const a=document.createElement('a');a.href=u;a.download=filename;
+    document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(u),5000);toast(t('saveDone'))}catch(e){toast(t('saveFail'))}}
+function exportJson(){saveFile('badminton-backup-'+new Date().toISOString().slice(0,10)+'.json',JSON.stringify({app:'kuanbad',v:2,at:now(),players:S.players,ledger:S.ledger,stock:S.stock,events:S.events,rsvp:S.rsvp,prefs:S.prefs},null,1))}
+function exportCsv(){
+  const rows=[['date','courts','players','games','shuttles','shuttles_per_game','court_fee','shuttle_price','cost','collected','currency']];
+  Object.values(S.ledger).sort((a,b)=>a.date-b.date).forEach(l=>rows.push([new Date(l.date).toISOString().slice(0,10),l.courts,l.players,l.games,l.shuttles,l.spg,l.fee.court,l.fee.shuttle,l.cost,l.collected,l.cur]));
+  rows.push([]);rows.push(['date','name','games','amount','paid']);
+  Object.values(S.ledger).sort((a,b)=>a.date-b.date).forEach(l=>(l.per||[]).forEach(p=>rows.push([new Date(l.date).toISOString().slice(0,10),p.name,p.games,p.amt,p.paid?'yes':'no'])));
+  saveFile('badminton-accounts.csv','﻿'+rows.map(r=>r.map(x=>{const s=String(x??'');return /[",\n]/.test(s)?'"'+s.replace(/"/g,'""')+'"':s}).join(',')).join('\n'));
+}
+document.getElementById('restoreFile').addEventListener('change',e=>{const f=e.target.files[0];if(!f)return;const rd=new FileReader();
+  rd.onload=()=>{try{const x=JSON.parse(rd.result);if(x.app!=='kuanbad')throw 0;let n=0;
+    for(const [id,p] of Object.entries(x.players||{})){S.players[id]=p;commitPlayer(id);n++}
+    for(const [id,l] of Object.entries(x.ledger||{})){S.ledger[id]=l;put('ledger/'+id,l);n++}
+    for(const [id,b] of Object.entries(x.stock||{})){S.stock[id]=b;put('stock/'+id,b);n++}
+    for(const [id,e] of Object.entries(x.events||{})){S.events[id]=e;put('events/'+id,e);n++}
+    for(const [id,e] of Object.entries(x.rsvp||{})){S.rsvp[id]=e;put('rsvp/'+id,e)}
+    if(x.prefs){S.prefs={...DEF_PREFS,...x.prefs};commitPrefs()}
+    toast(t('restored',{n}));render()}catch(err){toast(t('badFile'))}};rd.readAsText(f);e.target.value=''});
+
+/* =================== actions =================== */
+function act(a,el){
+  const id=el.dataset.id,ci=el.dataset.ci!==undefined?+el.dataset.ci:undefined,L=S.live;
+  if(ro&&!['jin','claim','newp','fsave','fcancel','fg','fans','flv','rsvp','pin','adminout','copylink','fbconnect','trylocal','resetcfg','copyppid','rv','copyrank','stat','qrtog','qrfor','payfor','recap','recapsave','evinv','tab','lang','share','copybill','closecopy','toggle','backup','csv','qsearch'].includes(a)){toast(t('readOnly'));return}
+  switch(a){
+    case 'tab':ui.tab=id;ui.sel=null;ui.form=null;ui.stat=null;ui.plan=null;ui.q='';window.scrollTo(0,0);break;
+    case 'lang':lang=id;try{localStorage.setItem('kuanbad.lang',id)}catch(e){}break;
+    case 'pcourts':S.prefs.courts=+id;commitPrefs();break;
+    case 'pformat':S.prefs.format=id;commitPrefs();break;
+    case 'pmode':S.prefs.mode=id;commitPrefs();break;
+    case 'pcur':S.prefs.cur=id;commitPrefs();break;
+    case 'useavg':S.prefs.shuttle=Math.round(stockInfo().avg*100)/100;commitPrefs();break;
+    case 'pk':{if(!ui.pick)ui.pick=new Set();ui.pick.has(id)?ui.pick.delete(id):ui.pick.add(id);break}
+    case 'pkall':ui.pick=new Set(Object.keys(S.players));break;
+    case 'pknone':ui.pick=new Set();break;
+    case 'start':startSession();break;
+    case 'pmeth':S.prefs.payMethod=id;commitPrefs();break;
+    case 'copyppid':copy(S.prefs.paypayId||'');return;
+    case 'pscore':S.prefs.scoring=id;commitPrefs();break;
+    case 'lscore':L.scoring=id;commitLive();break;
+    case 'scsave':{const c=L.courts[ci],r=parseScore(c.id,L.scoring);if(!r){toast(t('scoreInvalid'));return}finish(ci,r.w,r.games);delete ui.sc[c.id];toast(t('savedRes'));break}
+    case 'planstart':ui.plan=[];break;
+    case 'plancancel':ui.plan=null;break;
+    case 'planp':{const need=L.format==='singles'?2:4;const i=ui.plan.indexOf(id);if(i>=0)ui.plan.splice(i,1);else ui.plan.push(id);
+      if(ui.plan.length===need){L.planned=L.planned||[];L.planned.push({a:ui.plan.slice(0,need/2),b:ui.plan.slice(need/2)});ui.plan=null;commitLive();toast(t('planAdded'))}break}
+    case 'planauto':{const nx=pick([],{preview:true});if(!nx){toast(t('notEnough',{n:L.format==='singles'?2:4}));return}L.planned=L.planned||[];L.planned.push({a:nx[0],b:nx[1]});commitLive();toast(t('planAdded'));break}
+    case 'unplan':L.planned.splice(+id,1);commitLive();break;
+    case 'stat':ui.stat=id||null;window.scrollTo(0,0);break;
+    case 'qrtog':ui.showQr=!ui.showQr;break;
+    case 'qrfor':ui.qrFor=ui.qrFor===id?null:id;break;
+    case 'jin':{if(!L)return;if(isAdmin)setStatus(id,'in');else inboxAdd('checkin',id);toast(t('welcome',{n:nm(id)}));break}
+    case 'payfor':ui.payFor=ui.payFor===id?null:id;break;
+    case 'claim':if(isAdmin){L.claims=L.claims||{};L.claims[id]=now();commitLive()}else inboxAdd('claim',id);toast(t('claimSent'));break;
+    case 'pin':becomeAdmin((document.getElementById('pinIn')||{}).value||'');return;
+    case 'adminout':leaveAdmin();return;
+    case 'copylink':copy(joinUrl());return;
+    case 'fbconnect':{const c=parseCfg((document.getElementById('fbcfg')||{}).value||'');if(!c){toast(t('fbBad'));return}try{localStorage.setItem('kb.fb',JSON.stringify(c));localStorage.removeItem('kb.localOnly')}catch(e){}location.reload();return}
+    case 'trylocal':try{localStorage.setItem('kb.localOnly','1')}catch(e){}startLocal();return;
+    case 'resetcfg':if(!armed('resetcfg'))return;try{localStorage.removeItem('kb.fb');localStorage.removeItem('kb.admin');localStorage.removeItem('kb.localOnly')}catch(e){}location.href=location.origin+location.pathname;return;
+    case 'recap':makeRecap();return;
+    case 'recapsave':if(ui.recap)saveFile('badminton-recap-'+new Date(ui.recap.date).toISOString().slice(0,10)+'.png',ui.recap.blob);return;
+    case 'evnew':{const d=new Date();ui.ev={date:d.toISOString().slice(0,10),time:'19:00',place:S.prefs.lastPlace||'',note:''};break}
+    case 'evcancel':ui.ev=null;break;
+    case 'evsave':{const g=k=>(document.getElementById(k)||{}).value||'';const e={date:g('evdate'),time:g('evtime'),place:g('evplace'),note:g('evnote'),rsvp:{},created:now()};
+      if(!e.date)return;const eid=uid();S.events[eid]=e;put('events/'+eid,e);if(e.place){S.prefs.lastPlace=e.place;commitPrefs()}ui.ev=null;break}
+    case 'rsvp':{const [eid,pid]=id.split(':');if(!S.events[eid])return;const cur=rsOf(eid)[pid],key=eid+'_'+pid,nx=!cur?'y':cur==='y'?'n':null;
+      if(nx){S.rsvp[key]={e:eid,p:pid,v:nx};put('rsvp/'+key,S.rsvp[key])}else{delete S.rsvp[key];put('rsvp/'+key,null)}break}
+    case 'evinv':copy(inviteText(id));return;
+    case 'evuse':{const rs=rsOf(id);ui.pick=new Set(Object.keys(rs).filter(i=>rs[i]==='y'&&PL(i)));toast(t('evUsed'));break}
+    case 'evdel':if(!armed('ev'+id))return;delete S.events[id];put('events/'+id,null);for(const [k,x] of Object.entries(S.rsvp))if(x.e===id){delete S.rsvp[k];put('rsvp/'+k,null)}break;
+    case 'rv':ui.rv=id;break;
+    case 'copyrank':copy(rankText());return;
+    case 'pfm':S.prefs.feeMode=id;commitPrefs();break;
+    case 'ppay':S.prefs.payMode=id;commitPrefs();break;
+    case 'lfm':L.fee.mode=id;commitLive();break;
+    case 'lpay':L.fee.pay=id;commitLive();break;
+    case 'paid':L.paid=L.paid||{};L.paid[id]=!L.paid[id];if(L.claims)delete L.claims[id];commitLive();break;
+    case 'lpaid':{const [lid,ix]=id.split(':');const l=S.ledger[lid];if(l&&l.per[+ix]){l.per[+ix].paid=!l.per[+ix].paid;put('ledger/'+lid,l)}break}
+    case 'mode':L.mode=id;commitLive();break;
+    case 'courtHere':if(startCourt(ci))commitLive();break;
+    case 'fillall':{let n=0;L.courts.forEach((c,i)=>{if(!c.match&&startCourt(i,true))n++});if(n)commitLive();toast(n?t('filled',{n}):t('noFill'));break}
+    case 'win':finish(ci,id);toast(t('savedRes'));break;
+    case 'nores':finish(ci,null);toast(t('endedNoRes'));break;
+    case 'reshuffle':{const old=L.courts[ci].match;L.courts[ci].match=null;if(!startCourt(ci,true,6))L.courts[ci].match=old;commitLive();break}
+    case 'cancel':if(!armed('cancel'+ci))return;L.courts[ci].match=null;delete L.streak[L.courts[ci].id];commitLive();break;
+    case 'sh':{const m=L.courts[ci].match;m.sh=Math.max(0,Math.min(12,m.sh+(+id)));commitLive();break}
+    case 'sel':{if(ui.sel&&ui.sel.id===id){ui.sel=null;break}if(ui.sel){doSwap(ci,id);toast(t('swapped'));break}ui.sel={ci,id};break}
+    case 'swapq':doSwap(undefined,id);toast(t('swapped'));break;
+    case 'unsel':ui.sel=null;break;
+    case 'undo':{const u=undoStack.pop();if(u){S.live=JSON.parse(u.live);u.pl.forEach(([i,j])=>{S.players[i]=JSON.parse(j);commitPlayer(i)});commitLive();toast(t('undone'))}break}
+    case 'lcourts':{const d=+id;if(d>0){const last=L.courts[L.courts.length-1];L.courts.push(mkCourt(last&&/^\d+$/.test(last.name)?+last.name+1:L.courts.length+1))}else if(L.courts.length>1){if(L.courts[L.courts.length-1].match){toast(t('courtsBusy'));return}L.courts.pop()}commitLive();break}
+    case 'end':if(!armed('end'))return;endSession();break;
+    case 'discard':if(!armed('discard'))return;S.live=null;undoStack=[];commitLive();toast(t('discarded'));break;
+    case 'share':copy(shareText());return;
+    case 'copybill':{const Lx=id?null:S.live;if(Lx)copy(billText(Lx,billRows(Lx)));return}
+    case 'closecopy':ui.copy=null;break;
+    case 'newp':ui.form={id:null,name:'',g:'',ans:[-1,-1,-1,-1,-1],lv:null};window.scrollTo(0,0);break;
+    case 'editp':{const p=PL(id);ui.form={id,name:p.name,g:p.g||'',ans:p.ans?[...p.ans]:[-1,-1,-1,-1,-1],lv:null};window.scrollTo(0,0);break}
+    case 'fcancel':ui.form=null;break;
+    case 'fg':ui.form.g=id;keepName();break;
+    case 'fans':{const [q,o]=id.split(':').map(Number);ui.form.ans[q]=o;ui.form.lv=null;keepName();break}
+    case 'flv':ui.form.lv=+id;keepName();break;
+    case 'fsave':savePlayer();break;
+    case 'delp':if(!armed('del'+id))return;delete S.players[id];put('players/'+id,null);if(L&&L.sp[id]&&!busyIds().has(id)){delete L.sp[id];commitLive()}toast(t('deleted'));break;
+    case 'st':setStatus(id,el.dataset.v);break;
+    case 'bulktog':ui.bulk=!ui.bulk;break;
+    case 'bulkadd':{const tx=document.getElementById('bulk').value;let n=0;
+      tx.split(/\n|,/).forEach(l=>{const r=parseLine(l);if(r&&r.name){const pid=uid();S.players[pid]={name:r.name,g:r.g,lv:r.lv,selfLv:r.lv,ans:null,games:0,wins:0,losses:0,created:now(),upd:now()};commitPlayer(pid);if(ui.pick)ui.pick.add(pid);
+        if(L){L.sp[pid]={status:'in',games:0,wins:0,losses:0,lastEnd:now(),shu:0,att:true}}n++}});
+      if(n&&L)commitLive();toast(n?t('added',{n:n}):t('none'));if(n)ui.bulk=false;break}
+    case 'toggle':ui.open[id]=!ui.open[id];break;
+    case 'buy':{const tb=+document.getElementById('tubes').value,pe=+document.getElementById('per').value,pr=+document.getElementById('tprice').value;
+      if(!(tb>0&&pe>0))return;const bid=uid();S.stock[bid]={date:now(),tubes:tb,per:pe,price:pr||0,cur:S.prefs.cur};put('stock/'+bid,S.stock[bid]);break}
+    case 'delbuy':if(!armed('buy'+id))return;delete S.stock[id];put('stock/'+id,null);break;
+    case 'delled':if(!armed('led'+id))return;delete S.ledger[id];put('ledger/'+id,null);break;
+    case 'auto':if(L){L.auto=!L.auto;commitLive()}S.prefs.auto=L?L.auto:!S.prefs.auto;commitPrefs();break;
+    case 'backup':exportJson();return;
+    case 'csv':exportCsv();return;
+    case 'restore':document.getElementById('restoreFile').click();return;
+  }
+  render();
+}
+function keepName(){const e=document.getElementById('pname');if(e)ui.form.name=e.value}
+function chg(el){const c=el.dataset.c,v=Math.max(0,+el.value||0);
+  if(ro)return;
+  if(c==='courtNames'){S.prefs.courtNames=el.value;commitPrefs();render();return}
+  if(c==='ppId'||c==='payInfo'||c==='paypayCode'||c==='paypayId'){S.prefs[c]=el.value;commitPrefs();render();return}
+  if(c==='bond'){setBond(el.dataset.id,el.value||null);render();return}
+  const map={courtRate:'courtRate',hours:'hours',flat:'flat'};if(map[c]){S.prefs[map[c]]=v;commitPrefs();render();return}
+  const lmap={lrate:'rate',lhours:'hours',lflat:'flat'};if(lmap[c]){S.live.fee[lmap[c]]=v;commitLive();render();return}
+  if(c==='courtFee'){S.prefs.courtFee=v;commitPrefs()}
+  else if(c==='shPrice'){S.prefs.shuttle=v;commitPrefs()}
+  else if(c==='lfee'){S.live.fee.court=v;commitLive()}
+  else if(c==='lsh'){S.live.fee.shuttle=v;commitLive()}
+  else if(c==='lvset'){const p=PL(el.dataset.id);p.lv=+el.value;commitPlayer(el.dataset.id)}
+  render();
+}
+
+/* =================== views =================== */
+const ICONS={play:'<rect x="3" y="4" width="18" height="16" rx="1"/><path d="M12 3v18M3 12h4M17 12h4M7 4v16M17 4v16"/>',
+  players:'<circle cx="9" cy="8" r="3.2"/><path d="M3.5 19c.6-3.2 2.8-5 5.5-5s4.9 1.8 5.5 5"/><circle cx="17" cy="9" r="2.4"/><path d="M16 14.2c2.4-.2 4 1.3 4.5 4.3"/>',
+  rank:'<path d="M3 20h18M4 20v-5h5v5M9.5 20V9h5v11M15 20v-7h5v7"/><path d="M12 3.5l.9 1.8 2 .3-1.45 1.4.35 2-1.8-.95-1.8.95.35-2L9.1 5.6l2-.3z"/>',
+  acct:'<rect x="4" y="3" width="16" height="18" rx="2"/><path d="M8 8h8M8 12h8M8 16h5"/>',
+  set:'<path d="M4 7h10M18 7h2M4 17h4M12 17h8"/><circle cx="16" cy="7" r="2"/><circle cx="10" cy="17" r="2"/>'};
+function tabsHTML(){return (isAdmin||mode!=='db'?['play','players','rank','acct','set']:['play','players','rank','set']).map(k=>`<button class="tab" data-a="tab" data-id="${k}" aria-current="${ui.tab===k?'page':'false'}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">${ICONS[k]}</svg>${t('t_'+k)}</button>`).join('')}
+function hdr(){
+  const L=S.live;let counts='';
+  if(L){const sp=Object.values(L.sp);const inn=sp.filter(s=>s.status==='in').length,rest=sp.filter(s=>s.status==='rest').length;
+    counts=`<div class="counts"><span>${t('c_in')} <b>${inn}</b></span><span>${t('c_play')} <b>${busyIds().size}</b></span><span>${t('c_wait')} <b>${queue().length}</b></span>${rest?`<span>${t('c_rest')} <b>${rest}</b></span>`:''}</div>`}
+  return `<div class="toprow"><h1 class="brand">${t('brand')}${mode==='db'?` <span class="lvb" style="vertical-align:3px">${isAdmin?t('roleAdmin'):t('roleViewer')}</span>`:''}</h1><div class="lang" role="group" aria-label="${t('lang')}">${[['th','ไทย'],['en','EN'],['ja','日本']].map(([k,l])=>`<button data-a="lang" data-id="${k}" aria-pressed="${lang===k}">${l}</button>`).join('')}</div></div>${counts}`;
+}
+function copyBox(){return ui.copy?`<div class="card"><b>${t('copyManual')}</b><textarea id="copybox" readonly>${esc(ui.copy)}</textarea><button class="btn" data-a="closecopy">${t('close')}</button></div>`:''}
+const roBanner=()=>ro&&mode==='db'?`<div class="banner"><p>${t('readOnly')}</p></div>`:'';
+function modeChips(cur,act){return `<div class="modes" role="group" aria-label="${t('modeQ')}">${Object.keys(MODES).map(k=>`<button class="mchip" data-a="${act}" data-id="${k}" aria-pressed="${cur===k}">${t('m_'+k)}</button>`).join('')}</div><div class="mdesc">${t('d_'+cur)} · ${t('modeNote')}</div>`}
+
+function feeEst(P,n){
+  const cc=P.feeMode==='hourly'?(P.courtRate||0)*P.courts*(P.hours||0):(P.courtFee||0);
+  if(P.payMode==='flat')return t('estFlat',{v:moneyC(P.flat||0,P.cur),n,t:moneyC((P.flat||0)*n,P.cur),c:moneyC(cc,P.cur)});
+  return n?t('estPer',{v:moneyC(cc/n,P.cur),n}):'';
+}
+function feeCard(P,n){const si=stockInfo(),cc=(P.courtRate||0)*P.courts*(P.hours||0);
+  return `<section class="card"><h2>${t('k_courtCost')} · ${t('perPersonPay')}</h2>
+  <div><div class="lbl">${t('feeHow')}</div><div class="seg">${['total','hourly'].map(k=>`<button data-a="pfm" data-id="${k}" aria-pressed="${P.feeMode===k}">${t('fee_'+k)}</button>`).join('')}</div></div>
+  ${P.feeMode==='hourly'?`<div class="two"><label class="f">${t('courtRate')} (${esc(P.cur)})<input type="number" inputmode="decimal" id="courtRate" data-c="courtRate" value="${P.courtRate}"></label><label class="f">${t('hours')}<input type="number" inputmode="decimal" id="hours" data-c="hours" value="${P.hours}"></label></div>
+  <div class="hint">${t('courtCalc',{r:moneyC(P.courtRate||0,P.cur),c:P.courts,h:P.hours||0,v:moneyC(cc,P.cur)})}</div>`
+  :`<label class="f">${t('courtFee')} (${esc(P.cur)})<input type="number" inputmode="decimal" id="courtFee" data-c="courtFee" value="${P.courtFee}"></label>`}
+  <label class="f">${t('shPrice')} (${esc(P.cur)})<input type="number" inputmode="decimal" id="shPrice" data-c="shPrice" value="${P.shuttle}"></label>
+  ${si.has&&Math.abs(si.avg-P.shuttle)>.01?`<button class="btn sm ghost" data-a="useavg">${t('useAvg')} (${moneyC(si.avg,P.cur)})</button>`:''}
+  <div><div class="lbl">${t('payHow')}</div><div class="seg">${['usage','equal','games','flat'].map(k=>`<button data-a="ppay" data-id="${k}" aria-pressed="${P.payMode===k}">${t('pay_'+k)}</button>`).join('')}</div></div>
+  <div class="hint">${t('pd_'+P.payMode)}</div>
+  ${P.payMode==='flat'?`<label class="f">${t('flatAmt')} (${esc(P.cur)})<input type="number" inputmode="decimal" id="flat" data-c="flat" value="${P.flat}"></label>`:''}
+  <div class="result"><span>${t('perPersonPay')}</span><span style="text-align:right;font-weight:600">${feeEst(P,n)}</span></div>
+  </section>`}
+function vSetup(){
+  const P=S.prefs,ids=Object.keys(S.players).sort((a,b)=>nm(a).localeCompare(nm(b),LOC[lang]));
+  if(!ui.pick)ui.pick=new Set(ids);
+  const q=ui.q.trim().toLowerCase(),shown=q?ids.filter(i=>nm(i).toLowerCase().includes(q)):ids;
+  const n=[...ui.pick].filter(PL).length,si=stockInfo();
+  return `${roBanner()}${vEvents()}<section class="card adm"><h2>${t('setupTitle')}</h2>
+  <div><div class="lbl">${t('courtsQ')}</div><div class="nums">${[1,2,3,4,5,6,7,8].map(k=>`<button class="num" data-a="pcourts" data-id="${k}" aria-pressed="${P.courts===k}">${k}</button>`).join('')}</div></div>
+  <div><div class="lbl">${t('format')}</div><div class="seg">${['doubles','singles'].map(k=>`<button data-a="pformat" data-id="${k}" aria-pressed="${P.format===k}">${t(k)}</button>`).join('')}</div></div>
+  <div><div class="lbl">${t('modeQ')}</div>${modeChips(P.mode,'pmode')}</div>
+  <div><div class="lbl">${t('scoring')}</div><div class="seg">${['quick','bo1','bo3'].map(k=>`<button data-a="pscore" data-id="${k}" aria-pressed="${(P.scoring||'quick')===k}">${t('sc_'+k)}</button>`).join('')}</div></div>
+  <label class="f">${t('courtNames')}<input type="text" id="courtNames" data-c="courtNames" placeholder="${t('courtNamesPh')}" value="${esc(P.courtNames||'')}"></label>
+  </section>
+  ${ui.showQr?qrCard():''}
+  <div class="adm">${feeCard(P,n)}</div>
+  <section class="card"><div class="sec-h"><h2>${t('whoCame')}</h2><span class="hint">${n} / ${ids.length}</span></div>
+  ${ids.length?`<input type="search" id="qsearch" placeholder="${t('search')}" value="${esc(ui.q)}">
+  <div class="row"><button class="btn sm ghost" data-a="pkall">${t('selAll')}</button><button class="btn sm ghost" data-a="pknone">${t('selNone')}</button></div>
+  <div class="picks">${shown.map(i=>{const p=PL(i);return `<button class="pick" data-a="pk" data-id="${i}" aria-pressed="${ui.pick.has(i)}"><span>${esc(p.name)}</span><span class="lvb">${lvLabel(p.lv)}</span></button>`}).join('')}</div>
+  <button class="btn pri" data-a="start" ${ro?'disabled':''}>${t('startBtn',{n,c:P.courts})}</button>
+  <div class="row"><button class="btn ghost grow" data-a="tab" data-id="join">${t('openJoin')}</button><button class="btn ghost" data-a="qrtog">QR</button></div>`
+  :`<p class="hint" style="margin:0">${t('noPlayersYet')}</p><button class="btn pri" data-a="tab" data-id="players">${t('goAdd')}</button>`}
+  </section>`;
+}
+function chip(id,ci){const p=PL(id);if(!p)return `<button class="pc" data-a="sel" data-ci="${ci}" data-id="${id}"><span class="nm">${t('removed')}</span></button>`;const sel=ui.sel&&ui.sel.id===id;
+  return `<button class="pc${sel?' sel':''}" data-a="sel" data-ci="${ci}" data-id="${id}" aria-pressed="${!!sel}"><span class="nm">${esc(p.name)}${p.g?` <small style="opacity:.75">${t('gs_'+p.g)}</small>`:''}</span><span class="lvb">${lvLabel(p.lv)}</span></button>`}
+function courtHTML(c,ci){
+  const label=`${t('court')} ${esc(c.name)}`;
+  if(!c.match)return `<div class="court"><div class="court-h"><b>${label}</b><span>${t('free')}</span></div><div class="field"><div class="empty-f"><p>${t('free')}</p><button class="cbtn" data-a="courtHere" data-ci="${ci}">${t('startHere')}</button></div></div></div>`;
+  const m=c.match,sum=ids=>ids.reduce((s,i)=>s+(PL(i)?PL(i).lv:0),0);
+  return `<div class="court"><div class="court-h"><b>${label}</b><span>${m.stay?`<span class="streak">${t('champ')}</span> `:''}${t('minAgo',{m:mins(m.start)})} · ${t('skill')} ${sum(m.a).toFixed(1)} : ${sum(m.b).toFixed(1)}</span></div>
+  <div class="field"><div class="half l">${m.a.map(i=>chip(i,ci)).join('')}</div><div class="half r">${m.b.map(i=>chip(i,ci)).join('')}</div></div>
+  ${(S.live.scoring||'quick')==='quick'?`<div class="wins"><button class="cbtn" data-a="win" data-id="a" data-ci="${ci}">${t('leftWin')}</button><button class="cbtn" data-a="win" data-id="b" data-ci="${ci}">${t('rightWin')}</button></div>`:scoreBox(c,ci,S.live.scoring)}
+  <div class="ctools"><div class="stepper"><button data-a="sh" data-id="-1" data-ci="${ci}" aria-label="−">−</button><span>${t('shN',{n:m.sh})}</span><button data-a="sh" data-id="1" data-ci="${ci}" aria-label="+">+</button></div>
+  <button class="cbtn alt" data-a="nores" data-ci="${ci}">${t('noRes')}</button><button class="cbtn alt" data-a="reshuffle" data-ci="${ci}">${t('reshuffle')}</button>
+  <button class="cbtn alt${ui.arm==='cancel'+ci?' armed':''}" data-a="cancel" data-ci="${ci}">${ui.arm==='cancel'+ci?t('tapAgain'):t('cancel')}</button></div></div>`;
+}
+function vFirst(){return `<section class="card"><h2>${t('fbTitle')}</h2><p class="hint" style="margin:0">${t('fbIntro')}</p>
+  <textarea id="fbcfg" placeholder="const firebaseConfig = {&#10;  apiKey: &quot;...&quot;,&#10;  projectId: &quot;...&quot;, ...&#10;};"></textarea>
+  <button class="btn pri" data-a="fbconnect">${t('fbConnect')}</button><button class="btn ghost" data-a="trylocal">${t('tryLocal')}</button></section>`}
+function vFbErr(){return `<section class="card"><h2>${t('fbTitle')}</h2><p style="margin:0">${esc(t('fbErr',{m:ui.fberr||''}))}</p><p class="hint" style="margin:0">${t('fbErrHint')}</p>
+  <button class="btn warn${ui.arm==='resetcfg'?' armed':''}" data-a="resetcfg">${ui.arm==='resetcfg'?t('tapAgain'):t('resetCfg')}</button></section>`}
+function vPlay(){
+  if(mode==='nocfg')return vFirst();if(mode==='fberr')return vFbErr();
+  if(mode==='loading')return `<div class="card"><p class="hint" style="margin:0">${t('loading')}</p></div>`;
+  const L=S.live;if(!L)return mode==='db'&&!isAdmin?`${roBanner()}<button class="btn pri" data-a="tab" data-id="join">${t('joinTitle')}</button>${vEvents()}`:vSetup();
+  const q=queue(),anyEmpty=L.courts.some(c=>!c.match),nx=!anyEmpty&&L.mode!=='random'?pick([],{preview:true}):null,pset=plannedIds(),need=L.format==='singles'?2:4;
+  return `${roBanner()}${copyBox()}${!isAdmin?`<button class="btn pri" data-a="tab" data-id="join">${t('joinTitle')}</button>`:''}
+  <section class="sec adm">${modeChips(L.mode,'mode')}
+  <div class="row"><span class="hint">${t('scoring')}</span><div class="seg">${['quick','bo1','bo3'].map(k=>`<button data-a="lscore" data-id="${k}" aria-pressed="${(L.scoring||'quick')===k}">${t('sc_'+k)}</button>`).join('')}</div></div>
+  <div class="row"><button class="btn pri grow" data-a="fillall" ${anyEmpty?'':'disabled'}>${t('fillAll')}</button><button class="btn ghost" data-a="share">${t('share')}</button><button class="btn ghost" data-a="qrtog">QR</button></div></section>
+  ${ui.showQr?qrCard():''}
+  ${ui.sel?`<div class="banner"><p>${esc(t('selHint',{n:nm(ui.sel.id)}))}</p><button class="btn" data-a="unsel">${t('unsel')}</button></div>`:''}
+  <section class="sec">${L.courts.map(courtHTML).join('')}
+  <div class="row adm">${undoStack.length?`<button class="btn ghost grow" data-a="undo">${t('undo')}</button>`:''}
+  <div class="row"><span class="hint">${t('courtsNow')}</span><button class="btn sm" data-a="lcourts" data-id="-1" aria-label="−">−</button><b class="big">${L.courts.length}</b><button class="btn sm" data-a="lcourts" data-id="1" aria-label="+">+</button></div></div></section>
+  <section class="sec"><div class="sec-h"><h2>${t('queue')}</h2><span class="hint">${t('queueHint',{n:q.length})}</span></div>
+  ${(L.planned||[]).length?`<div class="next"><span class="hint">${t('planned')}</span>${L.planned.map((p,ix)=>`<div class="row"><span class="vs grow">${esc(team(p.a))}  vs  ${esc(team(p.b))}</span><button class="btn sm ghost" data-a="unplan" data-id="${ix}">${t('del')}</button></div>`).join('')}</div>`:''}
+  ${nx&&!ui.plan?`<div class="next"><span class="hint">${t('nextPred')}</span><span class="vs">${esc(team(nx[0]))}  vs  ${esc(team(nx[1]))}</span></div>`:''}
+  ${ui.plan?`<div class="banner"><p>${t('planHint',{need:need,n:ui.plan.length})}${ui.plan.length?' · '+esc(ui.plan.map(nm).join(', ')):''}</p><button class="btn" data-a="plancancel">${t('cancel')}</button></div>`
+    :`<div class="row adm"><button class="btn ghost grow" data-a="planstart">${t('plan')}</button><button class="btn ghost grow" data-a="planauto">${t('planAuto')}</button></div>`}
+  ${q.length?`<div class="q">${q.map((id,i)=>{const s=L.sp[id],inP=pset.has(id),sel=ui.plan&&ui.plan.includes(id);return `<div class="qi"><span class="qn">${i+1}</span><div class="qm"><b>${esc(nm(id))}</b> <span class="lvb">${lvLabel(PL(id).lv)}</span>${L.bonds&&L.bonds[id]&&PL(L.bonds[id])?` <span class="hint">· ${t('bond')}: ${esc(nm(L.bonds[id]))}</span>`:''}<div class="sub">${t('waited',{m:mins(s.lastEnd),g:s.games})}${inP?` · <span class="tag">${t('inPlan')}</span>`:''}</div></div>${ui.sel?`<button class="btn pri sm" data-a="swapq" data-id="${id}">${t('subIn')}</button>`:ui.plan&&!inP?`<button class="btn sm ${sel?'pri':'ghost'}" data-a="planp" data-id="${id}">${sel?'✓':t('planPick')}</button>`:'<span></span>'}</div>`}).join('')}</div>`:`<div class="hint">${t('noQueue')}</div>`}
+  </section>
+  <button class="btn adm${ui.arm==='end'?' armed':' pri'}" data-a="end">${ui.arm==='end'?t('endConfirm'):t('endSession')}</button>`;
+}
+function vForm(){
+  const f=ui.form,auto=assessLevel(f.ans),lv=f.lv||auto;
+  return `<section class="card"><div class="sec-h"><h2>${f.id?t('editPlayer'):t('addPlayer')}</h2><button class="btn sm ghost" data-a="fcancel">${t('cancel')}</button></div>
+  <label class="f">${t('name')}<input type="text" id="pname" placeholder="${t('namePh')}" value="${esc(f.name)}" autocomplete="off"></label>
+  <div><div class="lbl">${t('gender')}</div><div class="seg">${[['',t('g_none')],['M',t('g_M')],['F',t('g_F')]].map(([k,l])=>`<button data-a="fg" data-id="${k}" aria-pressed="${f.g===k}">${l}</button>`).join('')}</div></div>
+  <div><h3 style="font-size:16px">${t('selfAssess')}</h3><p class="hint" style="margin:2px 0 0">${t('assessIntro')}</p></div>
+  ${[1,2,3,4,5].map(n=>`<div class="qa"><div class="qt">${n}. ${t('q'+n)}</div><div class="opts">${T['q'+n+'o'][li()].map((o,j)=>`<button class="opt" data-a="fans" data-id="${n-1}:${j}" aria-pressed="${f.ans[n-1]===j}">${o}</button>`).join('')}</div></div>`).join('')}
+  <div class="result"><span>${t('yourLevel')}</span><span class="big">${lv?lvLabel(lv):`<span class="hint" style="font-size:14px">${t('answerAll')}</span>`}</span></div>
+  <div><div class="lbl">${t('override')}</div><div class="lvchips">${[1,2,3,4,5,6,7].map(k=>`<button class="lvc" data-a="flv" data-id="${k}" aria-pressed="${lv===k}">${lvLabel(k)}</button>`).join('')}</div></div>
+  <button class="btn pri" data-a="fsave">${t('save')}</button></section>`;
+}
+function vPlayers(){
+  if(ui.form)return vForm();
+  if(ui.stat)return vStat(ui.stat);
+  const L=S.live,b=busyIds(),ids=Object.keys(S.players).sort((x,y)=>nm(x).localeCompare(nm(y),LOC[lang]));
+  const q=ui.q.trim().toLowerCase(),shown=q?ids.filter(i=>nm(i).toLowerCase().includes(q)):ids;
+  return `${roBanner()}<div class="row"><button class="btn pri grow" data-a="newp">${t('addPlayer')}</button><button class="btn ghost" data-a="tab" data-id="join">${t('join')}</button><button class="btn ghost adm" data-a="bulktog">${ui.bulk?t('bulkHide'):t('bulk')}</button></div>
+  ${ui.bulk?`<section class="card"><textarea id="bulk" placeholder="${esc(t('bulkPh'))}"></textarea><span class="hint">${t('bulkHint')}</span><button class="btn pri" data-a="bulkadd">${t('addAll')}</button></section>`:''}
+  <section class="sec"><div class="sec-h"><h2>${t('roster')}</h2><span class="hint">${t('rosterHint',{n:ids.length})}</span></div>
+  ${ids.length>6?`<input type="search" id="qsearch" placeholder="${t('search')}" value="${esc(ui.q)}">`:''}
+  ${ids.length?`<div class="plist">${shown.map(id=>{const p=PL(id),pl=b.has(id),s=L&&L.sp[id],dl=ui.arm==='del'+id;
+    return `<div class="prow"><div class="ptop"><b>${esc(p.name)}${p.g?` <small class="hint">${t('gs_'+p.g)}</small>`:''}</b><span class="lvb">${lvLabel(p.lv)} ${p.lv.toFixed(1)}</span></div>
+    <div class="sub">${t('lifetime',{g:p.games||0,w:p.wins||0,lv:lvLabel(p.lv)})} · ${t('selfRated',{lv:lvLabel(p.selfLv||p.lv)})}${pl?` · <span class="tag">${t('playingNow')}</span>`:''}</div>
+    <div class="row adm">${L?(s?`<div class="seg">${['in','rest','out'].map(k=>`<button data-a="st" data-id="${id}" data-v="${k}" aria-pressed="${s.status===k}">${t('st_'+k)}</button>`).join('')}</div>`:`<button class="btn sm ghost" data-a="st" data-id="${id}" data-v="in">${t('checkIn')}</button>`):''}
+    ${L&&s&&L.format!=='singles'?`<label class="row hint" style="gap:4px">${t('bond')}<select data-c="bond" data-id="${id}" style="min-height:36px;width:auto;padding:2px 6px"><option value="">${t('bondNone')}</option>${Object.keys(L.sp).filter(o=>o!==id&&PL(o)).sort((a,b)=>nm(a).localeCompare(nm(b),LOC[lang])).map(o=>`<option value="${o}" ${L.bonds&&L.bonds[id]===o?'selected':''}>${esc(nm(o))}</option>`).join('')}</select></label>`:''}
+    <span class="grow"></span><button class="btn sm ghost" data-a="stat" data-id="${id}">${t('stats')}</button><button class="btn sm ghost" data-a="editp" data-id="${id}">${t('edit')}</button>
+    <button class="btn sm warn${dl?' armed':''}" data-a="delp" data-id="${id}" ${pl?'disabled':''}>${dl?t('confirm'):t('del')}</button></div></div>`}).join('')}</div>`
+  :`<div class="hint">${t('emptyRoster')}</div>`}</section>`;
+}
+function tiles(list){return `<div class="tiles">${list.map(([k,v,hl])=>`<div class="tile${hl?' hl':''}"><span class="k">${k}</span><span class="v">${v}</span></div>`).join('')}</div>`}
+function vAcct(){
+  const L=S.live,si=stockInfo(),led=Object.entries(S.ledger).sort((a,b)=>b[1].date-a[1].date);
+  let out=copyBox();
+  if(L){const st=sessionStats(L),rows=billRows(L);
+    const toC=rows.reduce((s,r)=>s+r.total,0),pd=rows.filter(r=>r.paid).reduce((s,r)=>s+r.total,0),bal=toC-st.cost,f=L.fee,pay=f.pay||'usage';
+    out+=`<section class="card"><div class="sec-h"><h2>${t('acctToday')}</h2><span class="hint">${new Date(L.startedAt).toLocaleDateString(LOC[lang])}</span></div>
+    ${tiles([[t('k_cost'),moneyC(st.cost,L.cur)],[t('k_toCollect'),moneyC(toC,L.cur)],[t('k_paid'),moneyC(pd,L.cur)],[t('k_owed'),moneyC(toC-pd,L.cur),toC-pd>0]])}
+    <div class="hint" style="font-weight:600;color:${bal<-0.5?'var(--loss)':'var(--accent)'}">${Math.abs(bal)<0.5?t('balEven'):bal>0?t('balOver',{v:moneyC(bal,L.cur)}):t('balUnder',{v:moneyC(-bal,L.cur)})}</div>
+    ${tiles([[t('k_games'),st.games],[t('k_sh'),st.sh],[t('k_shpg'),fmt1(st.spg),1],[t('perCourt'),fmt1(st.sh/L.courts.length)],[t('k_courtCost'),moneyC(courtCost(L),L.cur)],[t('k_shCost'),moneyC(st.sh*(f.shuttle||0),L.cur)]])}
+    <div><div class="lbl">${t('feeHow')}</div><div class="seg">${['total','hourly'].map(k=>`<button data-a="lfm" data-id="${k}" aria-pressed="${(f.mode||'total')===k}">${t('fee_'+k)}</button>`).join('')}</div></div>
+    ${f.mode==='hourly'?`<div class="two"><label class="f">${t('courtRate')}<input type="number" inputmode="decimal" id="lrate" data-c="lrate" value="${f.rate||0}"></label><label class="f">${t('hours')}<input type="number" inputmode="decimal" id="lhours" data-c="lhours" value="${f.hours||0}"></label></div>
+    <div class="hint">${t('courtCalc',{r:moneyC(f.rate||0,L.cur),c:L.courts.length,h:f.hours||0,v:moneyC(courtCost(L),L.cur)})}</div>`
+    :`<label class="f">${t('courtFee')}<input type="number" inputmode="decimal" id="lfee" data-c="lfee" value="${f.court||0}"></label>`}
+    <label class="f">${t('shPrice')}<input type="number" inputmode="decimal" id="lsh" data-c="lsh" value="${f.shuttle||0}"></label>
+    <div><div class="lbl">${t('payHow')}</div><div class="seg">${['usage','equal','games','flat'].map(k=>`<button data-a="lpay" data-id="${k}" aria-pressed="${pay===k}">${t('pay_'+k)}</button>`).join('')}</div></div>
+    <div class="hint">${t('pd_'+pay)}</div>
+    ${pay==='flat'?`<label class="f">${t('flatAmt')}<input type="number" inputmode="decimal" id="lflat" data-c="lflat" value="${f.flat||0}"></label>`:''}
+    <div class="sec-h"><h3 style="font-size:16px">${t('perPersonPay')}</h3><span class="hint">${t('tapPaid')}</span></div>
+    <div class="tbl-wrap"><table><thead><tr><th>${t('h_name')}</th><th>${t('h_games')}</th>${pay==='flat'?'':`<th>${t('h_court')}</th><th>${t('h_sh')}</th>`}<th>${t('h_total')}</th><th></th></tr></thead><tbody>
+    ${rows.map(r=>`<tr><td>${esc(r.name)}</td><td>${r.games}</td>${pay==='flat'?'':`<td>${Math.round(r.court)}</td><td>${Math.round(r.sh)}</td>`}<td><b>${moneyC(r.total,L.cur)}</b></td><td><div class="row" style="flex-wrap:nowrap;justify-content:flex-end">${hasPayQr(L)&&!r.paid?`<button class="btn sm ghost" data-a="qrfor" data-id="${r.id}">QR</button>`:''}<button class="btn sm ${r.paid?'pri':(L.claims&&L.claims[r.id])?'armed':'ghost'}" data-a="paid" data-id="${r.id}">${r.paid?t('paidY'):(L.claims&&L.claims[r.id])?t('pending'):t('paidN')}</button></div></td></tr>
+    ${ui.qrFor===r.id?`<tr><td colspan="6"><div class="center">${esc(t('payAmount',{n:r.name,v:moneyC(r.total,L.cur)}))}${payBlock(L,r)}</div></td></tr>`:''}`).join('')}</tbody></table></div>
+    <button class="btn" data-a="copybill">${t('copyBill')}</button></section>`;
+  }else out+=`<div class="card"><p class="hint" style="margin:0">${t('noSession')}</p></div>`;
+  const tot=led.reduce((a,[,l])=>({g:a.g+l.games,s:a.s+l.shuttles,c:a.c+l.cost,k:a.k+l.collected}),{g:0,s:0,c:0,k:0});
+  const cur=led.length?led[0][1].cur:S.prefs.cur;
+  out+=`<section class="sec"><h2>${t('allTime')}</h2>${tiles([[t('k_sessions'),led.length],[t('k_games'),tot.g],[t('k_sh'),tot.s],[t('k_avgshpg'),fmt1(tot.g?tot.s/tot.g:0),1],[t('k_cost'),moneyC(tot.c,cur)],[t('k_collected'),moneyC(tot.k,cur)]])}</section>`;
+  const owed={};led.forEach(([lid,l])=>(l.per||[]).forEach(p=>{if(!p.paid&&p.amt>0){const k=p.id||p.name;const o=owed[k]||(owed[k]={name:p.name,amt:0,n:0,cur:l.cur});o.amt+=p.amt;o.n++}}));
+  const ow=Object.values(owed).sort((a,b)=>b.amt-a.amt);
+  out+=`<section class="card"><h2>${t('owedTitle')}</h2>${ow.length?`<div class="tbl-wrap"><table><tbody>${ow.map(o=>`<tr><td>${esc(o.name)}</td><td class="hint">${t('owedLine',{n:o.n})}</td><td class="dn"><b>${moneyC(o.amt,o.cur)}</b></td></tr>`).join('')}</tbody></table></div>`:`<div class="hint">${t('noOwed')}</div>`}</section>`;
+  out+=`<section class="card"><h2>${t('stock')}</h2>
+    ${tiles([[t('k_left'),si.has?si.left:'–',1],[t('k_bought'),si.bought],[t('k_used'),si.used],[t('avgCost',{v:''}).trim(),si.has?moneyC(si.avg,S.prefs.cur):'–']])}
+    ${si.has?`<div class="bar" aria-hidden="true"><i style="width:${Math.max(0,Math.min(100,si.bought?100*si.left/si.bought:0))}%"></i></div>`:''}
+    ${si.has&&si.left<24?`<div class="banner" style="padding:8px 12px"><p>${t('lowStock')}</p></div>`:''}
+    <div class="three"><label class="f">${t('tubes')}<input type="number" inputmode="numeric" id="tubes" value="1"></label><label class="f">${t('perTube')}<input type="number" inputmode="numeric" id="per" value="12"></label><label class="f">${t('tubePrice')}<input type="number" inputmode="decimal" id="tprice" placeholder="0"></label></div>
+    <button class="btn" data-a="buy">${t('logBuy')}</button>
+    ${Object.entries(S.stock).sort((a,b)=>b[1].date-a[1].date).map(([id,b])=>`<div class="row"><span class="grow sub">${new Date(b.date).toLocaleDateString(LOC[lang])} · ${t('buyLine',{t:b.tubes,p:b.per,v:moneyC(b.tubes*b.price,b.cur||S.prefs.cur)})}</span><button class="btn sm warn${ui.arm==='buy'+id?' armed':''}" data-a="delbuy" data-id="${id}">${ui.arm==='buy'+id?t('confirm'):t('del')}</button></div>`).join('')}
+  </section>`;
+  out+=`<section class="sec"><h2>${t('history')}</h2>${led.length?`<div class="led">${led.map(([id,l])=>`<div class="ledi"><div class="lt"><b>${new Date(l.date).toLocaleDateString(LOC[lang],{year:'numeric',month:'short',day:'numeric',weekday:'short'})}</b><span class="big">${moneyC(l.cost,l.cur)}</span></div>
+    <div class="sub">${t('ledLine',{p:l.players,c:l.courts,g:l.games,s:l.shuttles,spg:fmt1(l.spg)})}</div>
+    <div class="sub">${t('k_courtCost')} ${moneyC(l.fee.court,l.cur)} · ${t('pay_'+(l.fee.pay||'usage'))} · ${t('k_toCollect')} ${moneyC(l.collected,l.cur)} · ${t('k_owed')} ${moneyC((l.per||[]).filter(p=>!p.paid).reduce((s,p)=>s+p.amt,0),l.cur)}</div>
+    <div class="row"><button class="btn sm ghost" data-a="toggle" data-id="${id}">${t('details')}</button><span class="grow"></span><button class="btn sm warn${ui.arm==='led'+id?' armed':''}" data-a="delled" data-id="${id}">${ui.arm==='led'+id?t('confirm'):t('del')}</button></div>
+    ${ui.open[id]?`<div class="tbl-wrap"><table><thead><tr><th>${t('h_name')}</th><th>${t('h_games')}</th><th>${t('h_total')}</th><th></th></tr></thead><tbody>${(l.per||[]).map((p,ix)=>`<tr><td>${esc(p.name)}</td><td>${p.games}</td><td>${moneyC(p.amt,l.cur)}</td><td><button class="btn sm ${p.paid?'pri':'ghost'}" data-a="lpaid" data-id="${id}:${ix}">${p.paid?t('paidY'):t('paidN')}</button></td></tr>`).join('')}</tbody></table></div>`:''}</div>`).join('')}</div>`:`<div class="hint">${t('noHistory')}</div>`}</section>`;
+  if(L&&L.history.length)out+=`<section class="sec"><h2>${t('recent')}</h2><div class="hist">${L.history.slice(0,12).map(h=>{const A=esc(team(h.a)),B=esc(team(h.b));
+    return `<div class="hi"><span class="hint">${t('court')} ${esc(h.court)} · ${new Date(h.end).toLocaleTimeString(LOC[lang],{hour:'2-digit',minute:'2-digit'})} · ${t('shN',{n:h.sh})}${h.sc?' · '+scStr(h.sc):''}</span><br>${h.w==='a'?`<span class="w">${A}</span>`:A} vs ${h.w==='b'?`<span class="w">${B}</span>`:B}</div>`}).join('')}</div></section>`;
+  return out;
+}
+function podium(list){const o=[[list[1],'s',2],[list[0],'g',1],[list[2],'b',3]];
+  return `<div class="podium">${o.map(([r,c,n])=>r?`<div class="pod ${c}"><div class="medal ${c}">${n}</div><div class="pn">${esc(r.name)}</div><div class="ps">${t('wl',{w:r.wins,l:r.losses})}</div><div class="step">${n}</div></div>`:`<div class="pod ${c}"></div>`).join('')}</div>`}
+function rankTable(list){const pct=r=>r.games?Math.round(100*r.wins/r.games):0;
+  return `<div class="tbl-wrap"><table><thead><tr><th>${t('h_rank')}</th><th style="text-align:left">${t('h_name')}</th><th>${t('h_games')}</th><th>${t('h_w')}</th><th>${t('h_l')}</th><th>${t('h_pct')}</th><th>${t('h_pd')}</th><th>${t('h_dlv')}</th></tr></thead><tbody>
+  ${list.map((r,i)=>`<tr class="${i<3?'top':''}"><td class="rk">${i<3?`<span class="medal ${['g','s','b'][i]}" style="width:22px;height:22px;font-size:12px;box-shadow:none">${i+1}</span>`:i+1}</td><td style="text-align:left">${esc(r.name)}</td><td>${r.games}</td><td>${r.wins}</td><td>${r.losses}</td><td>${pct(r)}</td><td>${(r.pd||0)>0?'+':''}${r.pd||0}</td><td class="${r.dlv>0.005?'up':r.dlv<-0.005?'dn':''}">${r.dlv>=0?'+':''}${(r.dlv||0).toFixed(2)}</td></tr>`).join('')}</tbody></table></div>`}
+function tally(o){return `<span class="mtally"><span class="g"><i></i>${o.g}</span><span class="s"><i></i>${o.s}</span><span class="b"><i></i>${o.b}</span></span>`}
+function rankText(){
+  if(ui.rv==='all'){return [t('rankTitle')+' · '+t('r_all'),...allTimeRank().slice(0,15).map((r,i)=>`${i+1}. ${r.name}  ${t('gold')}${r.g} ${t('silver')}${r.s} ${t('bronze')}${r.b} · ${t('wl',{w:r.wins,l:r.losses})}`)].join('\n')}
+  const {list,date}=todayList();const md=[t('gold'),t('silver'),t('bronze')];
+  return [t('rankTitle')+' '+new Date(date).toLocaleDateString(LOC[lang]),...list.map((r,i)=>`${i+1}. ${r.name}${i<3?' ('+md[i]+')':''} · ${t('wl',{w:r.wins,l:r.losses})}`)].join('\n')}
+function todayList(){if(S.live)return {list:liveRank(S.live),date:S.live.startedAt,live:true};
+  const last=Object.values(S.ledger).sort((a,b)=>b.date-a.date)[0];return last?{list:last.rank||[],date:last.date,live:false}:{list:[],date:now(),live:false}}
+function vRank(){
+  const v=ui.rv;let body='';
+  if(v==='today'){const {list,date,live}=todayList();
+    body=`<section class="card"><div class="sec-h"><h2>${live?t('podLive'):t('lastResult',{d:new Date(date).toLocaleDateString(LOC[lang])})}</h2></div>
+    ${list.length?podium(list)+rankTable(list)+`<div class="hint">${t('rankRule')}</div><div class="row"><button class="btn grow" data-a="copyrank">${t('copyRank')}</button><button class="btn pri grow" data-a="recap">${t('recap')}</button></div>`:`<p class="hint" style="margin:0">${t('noRank')}</p>`}
+    ${ui.recap?`<div class="recap"><img src="${ui.recap.url}" alt="${t('recapTitle')}"></div>${DL?`<button class="btn pri" data-a="recapsave">${t('recapSave')}</button>`:''}`:''}</section>`}
+  else if(v==='all'){const list=allTimeRank();
+    body=`<section class="card"><h2>${t('r_all')}</h2>${list.length?`${podium(list.map(r=>({...r})))}
+    <div class="tbl-wrap"><table><thead><tr><th>${t('h_rank')}</th><th style="text-align:left">${t('h_name')}</th><th style="text-align:left">${t('h_medals')}</th><th>${t('h_sess')}</th><th>${t('h_w')}</th><th>${t('h_pct')}</th><th>${t('h_lv')}</th></tr></thead><tbody>
+    ${list.map((r,i)=>`<tr class="${i<3?'top':''}"><td class="rk">${i+1}</td><td style="text-align:left">${esc(r.name)}</td><td style="text-align:left">${tally(r)}</td><td>${r.sess}</td><td>${r.wins}</td><td>${r.games?Math.round(100*r.wins/r.games):0}</td><td>${PL(r.id)?lvLabel(PL(r.id).lv)+' '+PL(r.id).lv.toFixed(1):'–'}</td></tr>`).join('')}</tbody></table></div>
+    <div class="hint">${t('allRule')}</div><button class="btn" data-a="copyrank">${t('copyRank')}</button>`:`<p class="hint" style="margin:0">${t('noAll')}</p>`}</section>`}
+  else{const led=Object.values(S.ledger).filter(l=>l.rank&&l.rank.length).sort((a,b)=>b.date-a.date);
+    body=led.length?led.map(l=>`<section class="card"><div class="sec-h"><h2>${new Date(l.date).toLocaleDateString(LOC[lang],{year:'numeric',month:'short',day:'numeric',weekday:'short'})}</h2><span class="hint">${t('ledLine',{p:l.players,c:l.courts,g:l.games,s:l.shuttles,spg:fmt1(l.spg)})}</span></div>${podium(l.rank)}</section>`).join(''):`<div class="card"><p class="hint" style="margin:0">${t('noAll')}</p></div>`}
+  return `<div class="seg" role="group" style="align-self:flex-start">${['today','all','past'].map(k=>`<button data-a="rv" data-id="${k}" aria-pressed="${v===k}">${t(k==='today'?'r_today':k==='all'?'r_all':'r_past')}</button>`).join('')}</div>${body}`;
+}
+function fmtHM(ms){const m=Math.round((ms||0)/60000);return t('hm',{h:Math.floor(m/60),m:m%60})}
+function setBond(a,b){const L=S.live,B=L.bonds=L.bonds||{};const old=B[a];if(old)delete B[old];delete B[a];
+  if(b){if(B[b])delete B[B[b]];B[a]=b;B[b]=a}commitLive()}
+function crc16(s){let c=0xFFFF;for(let i=0;i<s.length;i++){c^=s.charCodeAt(i)<<8;for(let j=0;j<8;j++)c=(c&0x8000)?((c<<1)^0x1021):(c<<1);c&=0xFFFF}return c.toString(16).toUpperCase().padStart(4,'0')}
+function ppPayload(id,amt){const f=(tg,v)=>tg+String(v.length).padStart(2,'0')+v;let d=String(id||'').replace(/\D/g,'');if(!d)return null;let acc;
+  if(d.length===15)acc=f('03',d);else if(d.length===13)acc=f('02',d);else acc=f('01',d.replace(/^0/,'66').padStart(13,'0'));
+  const p=f('00','01')+f('01',amt?'12':'11')+f('29',f('00','A000000677010111')+acc)+f('58','TH')+f('53','764')+(amt?f('54',(+amt).toFixed(2)):'')+'6304';return p+crc16(p)}
+function qrHTML(text,size){return `<div class="qrbox" data-qr="${esc(text)}" data-size="${size||200}" style="width:${(size||200)+24}px;max-width:100%"></div>`}
+function drawQRs(){if(!window.QRCode)return;document.querySelectorAll('[data-qr]').forEach(el=>{if(el.dataset.done)return;el.dataset.done=1;const sz=+el.dataset.size||200;
+  try{new QRCode(el,{text:el.dataset.qr,width:sz,height:sz,colorDark:'#000000',colorLight:'#ffffff',correctLevel:QRCode.CorrectLevel.M})}catch(e){}})}
+function hasPayQr(L){const P=S.prefs,m=P.payMethod||'paypay';return (m==='paypay'&&!!P.paypayCode)||(m==='promptpay'&&!!P.ppId&&L.cur==='฿')}
+function payBlock(L,r){const P=S.prefs,m=P.payMethod||'paypay';let h='';
+  if(m==='paypay'){if(P.paypayCode){h+=qrHTML(P.paypayCode,200)+`<b>${esc(t('ppScan',{v:moneyC(r.total,L.cur)}))}</b>`;
+      if(/^https:\/\//.test(P.paypayCode))h+=`<a class="btn ghost sm" href="${esc(P.paypayCode)}" target="_blank" rel="noopener">${t('openPP')}</a>`}
+    if(P.paypayId)h+=`<div class="row" style="justify-content:center"><span class="hint">PayPay ID: <b>${esc(P.paypayId)}</b></span><button class="btn sm ghost" data-a="copyppid">${t('copyId')}</button></div>`}
+  else if(m==='promptpay'&&L.cur==='฿'&&P.ppId){const pl=ppPayload(P.ppId,r.total);if(pl)h+=qrHTML(pl,200)}
+  if(P.payInfo)h+=`<div class="hint" style="white-space:pre-wrap">${esc(P.payInfo)}</div>`;return h}
+function scoreBox(c,ci,sm){const n=sm==='bo3'?3:1,d=ui.sc[c.id]||[];
+  return `<div class="scb">${Array.from({length:n},(_,g)=>`<div class="scr"><span>${t('gameN',{n:g+1})}</span><input type="number" inputmode="numeric" min="0" max="40" id="sc-${c.id}-${g}-0" data-sc="${c.id}:${g}:0" value="${d[g]&&d[g][0]!=null?d[g][0]:''}" aria-label="${t('leftSide')}"><b>–</b><input type="number" inputmode="numeric" min="0" max="40" id="sc-${c.id}-${g}-1" data-sc="${c.id}:${g}:1" value="${d[g]&&d[g][1]!=null?d[g][1]:''}" aria-label="${t('rightSide')}"></div>`).join('')}
+  <button class="cbtn" data-a="scsave" data-ci="${ci}">${t('saveScore')}</button></div>`}
+function parseScore(cid,sm){const d=ui.sc[cid]||[],n=sm==='bo3'?3:1,games=[];let wa=0,wb=0;
+  for(let g=0;g<n;g++){const x=d[g];if(!x||x[0]==null||x[1]==null||x[0]===''||x[1]==='')break;const l=+x[0],r=+x[1];if(l===r)return null;games.push([l,r]);l>r?wa++:wb++;if(sm==='bo3'&&(wa===2||wb===2))break}
+  if(!games.length)return null;if(sm==='bo3'&&wa<2&&wb<2)return null;return {w:wa>wb?'a':'b',games}}
+const scStr=sc=>sc?sc.map(g=>g[0]+'–'+g[1]).join(', '):'';
+function rsOf(eid){const r={};for(const x of Object.values(S.rsvp))if(x.e===eid)r[x.p]=x.v;return r}
+function evCard(id,ev,kiosk){const ids=Object.keys(S.players).sort((a,b)=>nm(a).localeCompare(nm(b),LOC[lang]));const rs=rsOf(id);
+  const y=ids.filter(i=>rs[i]==='y').length,n=ids.filter(i=>rs[i]==='n').length;
+  const d=new Date(ev.date+'T'+(ev.time||'00:00'));
+  return `<div class="evc"><div class="sec-h"><b>${d.toLocaleDateString(LOC[lang],{weekday:'short',month:'short',day:'numeric'})} ${esc(ev.time||'')}</b><span class="hint">${t('going',{n:y})} · ${t('notGoing',{n})}</span></div>
+  ${ev.place?`<div class="sub">${esc(ev.place)}</div>`:''}${ev.note?`<div class="sub">${esc(ev.note)}</div>`:''}
+  <div class="hint">${t('rsvpHint')}</div>
+  <div class="rs">${ids.map(i=>`<button class="rsc ${rs[i]||''}" data-a="rsvp" data-id="${id}:${i}">${esc(nm(i))}</button>`).join('')}</div>
+  ${kiosk?'':`<div class="row adm"><button class="btn sm ghost" data-a="evinv" data-id="${id}">${t('invite')}</button><button class="btn sm ghost" data-a="evuse" data-id="${id}">${t('useEvent')}</button><span class="grow"></span><button class="btn sm warn${ui.arm==='ev'+id?' armed':''}" data-a="evdel" data-id="${id}">${ui.arm==='ev'+id?t('confirm'):t('del')}</button></div>`}</div>`}
+function upcoming(){const today=new Date();today.setHours(0,0,0,0);return Object.entries(S.events).filter(([,e])=>new Date(e.date+'T23:59')>=today).sort((a,b)=>(a[1].date+a[1].time).localeCompare(b[1].date+b[1].time))}
+function vEvents(){const ev=ui.ev,list=upcoming();
+  return `<section class="card"><div class="sec-h"><h2>${t('events')}</h2>${ev?'':`<button class="btn sm adm" data-a="evnew">${t('newEvent')}</button>`}</div>
+  ${ev?`<div class="two"><label class="f">${t('evDate')}<input type="date" id="evdate" value="${esc(ev.date)}"></label><label class="f">${t('evTime')}<input type="time" id="evtime" value="${esc(ev.time)}"></label></div>
+  <label class="f">${t('evPlace')}<input type="text" id="evplace" value="${esc(ev.place)}"></label><label class="f">${t('evNote')}<input type="text" id="evnote" value="${esc(ev.note)}"></label>
+  <div class="row"><button class="btn pri grow" data-a="evsave">${t('evSave')}</button><button class="btn ghost" data-a="evcancel">${t('cancel')}</button></div>`:''}
+  ${list.length?list.map(([id,e])=>evCard(id,e,false)).join(''):(ev?'':`<div class="hint">${t('noEvents')}</div>`)}</section>`}
+function inviteText(id){const ev=S.events[id],rs=rsOf(id);const d=new Date(ev.date+'T'+(ev.time||'00:00'));const y=Object.keys(rs).filter(i=>rs[i]==='y'&&PL(i)).map(nm);
+  return [t('inviteT')+' '+d.toLocaleDateString(LOC[lang],{weekday:'short',month:'short',day:'numeric'})+' '+(ev.time||''),ev.place||'',ev.note||'',y.length?t('comeList')+' ('+y.length+'): '+y.join(', '):'',t('answerIn')+': '+joinUrl()].filter(Boolean).join('\n')}
+function qrCard(){return `<section class="card center"><h2>${t('qrTitle')}</h2>${qrHTML(joinUrl(),190)}<div class="row" style="justify-content:center"><button class="btn sm ghost" data-a="copylink">${t('copyLink')}</button></div><p class="hint" style="margin:0;text-align:left">${t('qrNote')}</p><button class="btn pri" data-a="tab" data-id="join">${t('openJoin')}</button></section>`}
+function vJoin(){
+  if(ui.form)return vForm();
+  const L=S.live,ids=Object.keys(S.players).sort((a,b)=>nm(a).localeCompare(nm(b),LOC[lang]));
+  const q=ui.q.trim().toLowerCase(),shown=q?ids.filter(i=>nm(i).toLowerCase().includes(q)):ids;
+  let h=`${roBanner()}<section class="card kiosk"><h2 style="font-size:22px">${t('joinTitle')}</h2>`;
+  if(L){h+=`<p class="hint" style="margin:0">${t('joinHint')}</p>${ids.length>12?`<input type="search" id="qsearch" placeholder="${t('search')}" value="${esc(ui.q)}">`:''}
+    <div class="picks">${shown.map(i=>{const s=L.sp[i],on=(s&&s.status==='in')||Object.values(S.inbox).some(m=>m.type==='checkin'&&m.pid===i);return `<button class="pick" data-a="jin" data-id="${i}" aria-pressed="${!!on}"><span>${esc(nm(i))}</span><span class="lvb">${on?'✓':lvLabel(PL(i).lv)}</span></button>`}).join('')}</div>`}
+  else h+=`<p class="hint" style="margin:0">${t('joinNoSession')}</p>`;
+  h+=`<button class="btn pri" data-a="newp">${t('firstTime')}</button></section>`;
+  if(L){const rows=billRows(L).filter(r=>r.total>0);
+    if(rows.length){h+=`<section class="card"><h2>${t('payTitle')}</h2><p class="hint" style="margin:0">${t('payPick')}</p>
+      <div class="picks">${rows.map(r=>`<button class="pick" data-a="payfor" data-id="${r.id}" aria-pressed="${ui.payFor===r.id}"><span>${esc(r.name)}</span><span class="lvb">${r.paid?'✓':moneyC(r.total,L.cur)}</span></button>`).join('')}</div>`;
+      const r=rows.find(x=>x.id===ui.payFor);
+      if(r)h+=`<div class="center"><b class="big" style="font-size:20px">${esc(t('payAmount',{n:r.name,v:moneyC(r.total,L.cur)}))}</b>${payBlock(L,r)}
+        ${r.paid?`<span class="tag">${t('paidY')}</span>`:((L.claims&&L.claims[r.id])||Object.values(S.inbox).some(m=>m.type==='claim'&&m.pid===r.id))?`<span class="hint">${t('claimSent')}</span>`:`<button class="btn pri" data-a="claim" data-id="${r.id}">${t('iPaid')}</button>`}</div>`;
+      h+=`</section>`}}
+  else{const list=upcoming();if(list.length)h+=`<section class="card"><h2>${t('events')}</h2>${list.slice(0,2).map(([id,e])=>evCard(id,e,true)).join('')}</section>`}
+  h+=`<button class="btn ghost" data-a="tab" data-id="play">${t('exitJoin')}</button>`;
+  return h;
+}
+function vStat(id){const p=PL(id);if(!p){ui.stat=null;return ''}
+  const all=allTimeRank(),ix=all.findIndex(r=>r.id===id),me=all[ix]||{g:0,s:0,b:0};
+  const sess=Object.values(S.ledger).filter(l=>(l.per||[]).some(x=>x.id===id)).length+(S.live&&S.live.sp[id]?1:0);
+  const g=p.games||0,w=p.wins||0,l=p.losses||0,pd=(p.pf||0)-(p.pa||0);
+  const parts=Object.entries(p.partners||{}).filter(([k])=>PL(k)).sort((a,b)=>b[1]-a[1]).slice(0,6);
+  return `<section class="card"><div class="sec-h"><h2>${esc(p.name)}</h2><button class="btn sm ghost" data-a="stat" data-id="">${t('back')}</button></div>
+  <div class="row"><span class="lvb" style="font-size:14px">${lvLabel(p.lv)} ${p.lv.toFixed(2)}</span><span class="hint">${t('selfRated',{lv:lvLabel(p.selfLv||p.lv)})}</span>${tally(me)}</div>
+  ${ix>=0?`<div class="hint">${t('allRankPos',{r:ix+1,n:all.length})}</div>`:''}
+  ${tiles([[t('k_games'),g],[t('k_wl'),w+'–'+l],[t('k_winrate'),(w+l?Math.round(100*w/(w+l)):0)+'%',1],[t('k_play'),fmtHM(p.playMs)],[t('k_sessN'),sess],[t('k_pd'),(pd>=0?'+':'')+pd]])}
+  <h3 style="font-size:16px">${t('partnersT')}</h3>
+  ${parts.length?`<div class="tbl-wrap"><table><thead><tr><th>${t('h_name')}</th><th>${t('h_together')}</th><th>${t('h_w')}</th><th>${t('h_pct')}</th></tr></thead><tbody>${parts.map(([k,n])=>{const pw=(p.pw||{})[k]||0;return `<tr><td>${esc(nm(k))}</td><td>${n}</td><td>${pw}</td><td>${Math.round(100*pw/n)}</td></tr>`}).join('')}</tbody></table></div>`:`<div class="hint">${t('noPartners')}</div>`}
+  </section>`}
+async function makeRecap(){
+  const {list,date,live}=todayList();if(!list.length)return;
+  const last=Object.values(S.ledger).sort((a,b)=>b.date-a.date)[0];
+  const st=live?sessionStats(S.live):{players:last.players,games:last.games,sh:last.shuttles,spg:last.spg};
+  try{await Promise.all(['700 60px "Chakra Petch"','600 40px "IBM Plex Sans Thai"','600 40px "IBM Plex Sans JP"'].map(f=>document.fonts.load(f)))}catch(e){}
+  const Wd=1080,Ht=1350,c=document.createElement('canvas');c.width=Wd;c.height=Ht;const x=c.getContext('2d');
+  const FF='"Chakra Petch","IBM Plex Sans Thai","IBM Plex Sans JP",sans-serif';
+  x.fillStyle='#1E5741';x.fillRect(0,0,Wd,Ht);x.fillStyle='#256348';x.fillRect(70,70,Wd-140,Ht-140);
+  x.strokeStyle='rgba(243,247,244,.35)';x.lineWidth=5;x.strokeRect(70,70,Wd-140,Ht-140);x.strokeRect(120,70,Wd-240,Ht-140);
+  x.setLineDash([14,12]);x.beginPath();x.moveTo(70,Ht/2+40);x.lineTo(Wd-70,Ht/2+40);x.stroke();x.setLineDash([]);
+  const fit=(s,w,sz,wt)=>{let f=sz;x.font=`${wt} ${f}px ${FF}`;while(x.measureText(s).width>w&&f>18){f-=2;x.font=`${wt} ${f}px ${FF}`}return s};
+  x.textAlign='center';x.fillStyle='#F3F7F4';x.font=`700 34px ${FF}`;x.fillText(t('brand').toUpperCase(),Wd/2,150);
+  x.font=`700 68px ${FF}`;fit(t('recapTitle'),860,68,700);x.fillText(t('recapTitle'),Wd/2,235);
+  x.font=`500 34px ${FF}`;x.globalAlpha=.85;x.fillText(new Date(date).toLocaleDateString(LOC[lang],{weekday:'long',year:'numeric',month:'long',day:'numeric'}),Wd/2,290);x.globalAlpha=1;
+  const cols=[['#B9C2C7',2,370,220],['#E2B33C',1,540,300],['#C98049',3,710,180]],base=760;
+  cols.forEach(([col,n,cx,hgt])=>{const r=list[n-1];if(!r)return;const w=160,top=base-hgt;
+    x.fillStyle=col;x.fillRect(cx-w/2,top,w,hgt);x.fillStyle='#ffffff';x.font=`700 64px ${FF}`;x.fillText(String(n),cx,top+80);
+    x.beginPath();x.arc(cx,top-130,34,0,7);x.fillStyle=col;x.fill();x.lineWidth=6;x.strokeStyle='rgba(255,255,255,.5)';x.stroke();
+    x.fillStyle='#fff';x.font=`700 32px ${FF}`;x.fillText(String(n),cx,top-119);
+    x.fillStyle='#F3F7F4';fit(r.name,200,38,700);x.fillText(r.name,cx,top-60);x.font=`500 26px ${FF}`;x.globalAlpha=.85;x.fillText(t('wl',{w:r.wins,l:r.losses}),cx,top-22);x.globalAlpha=1});
+  const stats=[[t('c_players'),st.players],[t('c_games'),st.games],[t('c_sh'),st.sh],[t('c_spg'),fmt1(st.spg)]];
+  stats.forEach(([k,v],i)=>{const cx=180+i*240;x.fillStyle='rgba(8,30,22,.35)';x.fillRect(cx-105,850,210,140);x.fillStyle='#F3F7F4';x.font=`700 56px ${FF}`;x.fillText(String(v),cx,930);x.font=`500 24px ${FF}`;x.globalAlpha=.8;x.fillText(k,cx,968);x.globalAlpha=1});
+  x.textAlign='left';list.slice(3,11).forEach((r,i)=>{const col=i%2,row=Math.floor(i/2),px=150+col*420,py=1060+row*52;x.fillStyle='#F3F7F4';x.font=`700 28px ${FF}`;x.fillText((i+4)+'.',px,py);fit(r.name,240,28,500);x.fillText(r.name,px+56,py);x.font=`500 24px ${FF}`;x.globalAlpha=.75;x.textAlign='right';x.fillText(t('wl',{w:r.wins,l:r.losses}),px+380,py);x.textAlign='left';x.globalAlpha=1});
+  const blob=await new Promise(r=>c.toBlob(r,'image/png'));ui.recap={url:c.toDataURL('image/png'),blob,date};render();
+}
+function adminCard(){if(mode!=='db')return '';
+  return `<section class="card"><h2>${t('adminTitle')}</h2>${isAdmin?`<p class="hint" style="margin:0">${t('adminYes')}</p><button class="btn ghost" data-a="adminout">${t('adminOffBtn')}</button>`
+  :`<p class="hint" style="margin:0">${t('adminNo')}</p><input type="password" inputmode="numeric" id="pinIn" placeholder="${t('pinPh')}" autocomplete="off"><button class="btn pri" data-a="pin">${t('pinBtn')}</button><p class="hint" style="margin:0">${t('pinFirst')}</p>`}</section>`}
+function vSet(){
+  const auto=S.live?S.live.auto:S.prefs.auto;
+  if(mode==='db'&&!isAdmin)return `${adminCard()}<section class="card"><h2>${t('lang')}</h2><div class="seg">${[['th','ไทย'],['en','English'],['ja','日本語']].map(([k,l])=>`<button data-a="lang" data-id="${k}" aria-pressed="${lang===k}">${l}</button>`).join('')}</div></section>${qrCard()}`;
+  return `${adminCard()}<section class="card"><h2>${t('t_set')}</h2>
+  <div class="sec-h"><span>${t('lang')}</span><div class="seg">${[['th','ไทย'],['en','English'],['ja','日本語']].map(([k,l])=>`<button data-a="lang" data-id="${k}" aria-pressed="${lang===k}">${l}</button>`).join('')}</div></div>
+  <div class="sec-h"><span>${t('currency')}</span><div class="seg">${['฿','¥','$','€'].map(c=>`<button data-a="pcur" data-id="${c}" aria-pressed="${S.prefs.cur===c}">${c}</button>`).join('')}</div></div>
+  <div class="sec-h"><span>${t('autoAdj')}</span><div class="seg"><button data-a="auto" aria-pressed="${auto}">${auto?t('on'):t('off')}</button></div></div></section>
+  <section class="card"><h2>${t('recvTitle')}</h2>
+  <div><div class="lbl">${t('payMethod')}</div><div class="seg">${['paypay','promptpay','other'].map(k=>`<button data-a="pmeth" data-id="${k}" aria-pressed="${(S.prefs.payMethod||'paypay')===k}">${t('pm_'+k)}</button>`).join('')}</div></div>
+  ${(S.prefs.payMethod||'paypay')==='paypay'?`<div class="hint">${t('ppUploadHint')}</div>
+    <label class="btn pri" for="paypayImg" style="cursor:pointer">${t('ppUpload')}</label><input type="file" id="paypayImg" accept="image/*" hidden>
+    <label class="f">${t('ppCode')}<input type="text" id="paypayCode" data-c="paypayCode" value="${esc(S.prefs.paypayCode||'')}" autocomplete="off"></label>
+    ${S.prefs.paypayCode?`<div class="center">${qrHTML(S.prefs.paypayCode,160)}</div>`:''}
+    <label class="f">${t('ppIdLbl')}<input type="text" id="paypayId" data-c="paypayId" value="${esc(S.prefs.paypayId||'')}" autocomplete="off"></label>`
+  :(S.prefs.payMethod==='promptpay'?`<label class="f">${t('ppId')}<input type="text" inputmode="numeric" id="ppId" data-c="ppId" value="${esc(S.prefs.ppId||'')}"></label><div class="hint">${t('ppNote')}</div>`:'')}
+  <label class="f">${t('payInfo')}<textarea id="payInfo" data-c="payInfo" style="min-height:70px">${esc(S.prefs.payInfo||'')}</textarea></label></section>
+  ${qrCard()}
+  <section class="card"><h2>${t('howTitle')}</h2><ol style="margin:0;padding-left:20px;display:flex;flex-direction:column;gap:6px;font-size:14px;color:var(--muted)">${[1,2,3,4].map(n=>`<li>${t('how'+n)}</li>`).join('')}</ol></section>
+  <section class="card"><h2>${t('dataTitle')}</h2><p class="hint" style="margin:0">${mode==='db'?t('dataDb'):t('dataLocal')}</p>
+  ${DL?`<div class="row"><button class="btn grow" data-a="backup">${t('backup')}</button><button class="btn grow" data-a="csv">${t('exportCsv')}</button></div>`:''}
+  <button class="btn ghost" data-a="restore" ${ro?'disabled':''}>${t('restore')}</button>
+  ${mode==='db'?`<button class="btn ghost${ui.arm==='resetcfg'?' armed':''}" data-a="resetcfg">${ui.arm==='resetcfg'?t('tapAgain'):t('resetCfg')}</button>`:''}
+  ${S.live?`<button class="btn warn${ui.arm==='discard'?' armed':''}" data-a="discard">${ui.arm==='discard'?t('tapAgain'):t('discard')}</button>`:''}</section>`;
+}
+function render(){
+  document.documentElement.lang=lang;
+  document.getElementById('hdr').innerHTML=hdr();
+  document.getElementById('tabs').innerHTML=tabsHTML();
+  const v=document.getElementById('view');
+  v.innerHTML=mode==='nocfg'?vFirst():mode==='fberr'?vFbErr():ui.tab==='join'?vJoin():ui.tab==='play'?vPlay():ui.tab==='players'?vPlayers():ui.tab==='rank'?vRank():ui.tab==='acct'?vAcct():vSet();
+  const cb=document.getElementById('copybox');if(cb){cb.focus();cb.select()}
+  document.querySelector('.tabs').hidden=ui.tab==='join'||mode==='nocfg';document.body.classList.toggle('viewer',mode==='db'&&!isAdmin);drawQRs();syncBar();
+}
+document.addEventListener('click',e=>{const b=e.target.closest('[data-a]');if(!b||b.disabled)return;act(b.dataset.a,b)});
+document.addEventListener('change',e=>{if(e.target.id==='paypayImg'){readPayPay(e.target.files[0]);e.target.value='';return}if(e.target.dataset&&e.target.dataset.c)chg(e.target)});
+function readPayPay(f){if(!f||ro)return;const url=URL.createObjectURL(f),img=new Image();
+  img.onload=()=>{try{const sc=Math.min(1,1600/Math.max(img.width,img.height)),w=Math.round(img.width*sc),h=Math.round(img.height*sc);
+    const c=document.createElement('canvas');c.width=w;c.height=h;const x=c.getContext('2d');x.drawImage(img,0,0,w,h);
+    const r=window.jsQR?jsQR(x.getImageData(0,0,w,h).data,w,h):null;
+    if(r&&r.data){S.prefs.paypayCode=r.data;S.prefs.payMethod='paypay';commitPrefs();toast(t('ppRead'));render()}else toast(t('ppFail'))}catch(err){toast(t('ppFail'))}URL.revokeObjectURL(url)};
+  img.onerror=()=>{toast(t('ppFail'));URL.revokeObjectURL(url)};img.src=url}
+document.addEventListener('input',e=>{if(e.target.id==='qsearch'){ui.q=e.target.value;const pos=e.target.selectionStart;render();const n=document.getElementById('qsearch');if(n){n.focus();n.setSelectionRange(pos,pos)}}
+  else if(e.target.id==='pname'&&ui.form)ui.form.name=e.target.value;
+  else if(e.target.dataset&&e.target.dataset.sc){const [cid,g,sd]=e.target.dataset.sc.split(':');const d=ui.sc[cid]=ui.sc[cid]||[];d[+g]=d[+g]||[null,null];d[+g][+sd]=e.target.value===''?null:e.target.value}});
+setInterval(()=>{if(ui.tab==='play'&&S.live)requestRender()},30000);
+boot();
+</script>
+
+</body>
+</html>
